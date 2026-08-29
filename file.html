@@ -473,7 +473,7 @@ window.downloadFile = async () => {
   const data = { raw_script: fileData.raw_script, segments: segs.map(s => ({ raw_segment: s.raw_segment, translations: s.translations, status: s.status })) }
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob)
-  a.download = fileData.name.replace('.txt','') + '.myformat'; a.click()
+  a.download = fileData.name.replace('.txt','') + '.json'; a.click()
 }
 
 load()
