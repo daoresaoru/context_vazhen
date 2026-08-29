@@ -7,50 +7,90 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #cccccc; min-height: 100vh; }
-    nav {
-      background: #0f0f1a; padding: 14px 32px;
-      display: flex; align-items: center; gap: 24px;
-      border-bottom: 1px solid #333355;
-    }
+    nav { background: #0f0f1a; padding: 14px 32px; display: flex; align-items: center; gap: 24px; border-bottom: 1px solid #333355; }
     nav .logo { font-size: 18px; font-weight: bold; color: #aaaaff; text-decoration: none; }
     nav a { color: #888899; text-decoration: none; font-size: 14px; }
     nav a:hover { color: #ccccff; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
     h1 { font-size: 22px; color: #ccccff; margin-bottom: 4px; }
     .card { background: #252540; border: 1px solid #333355; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
-    .btn {
-      display: inline-block; padding: 8px 16px; border-radius: 5px;
-      font-size: 13px; cursor: pointer; text-decoration: none; border: none;
-    }
+    .btn { display: inline-block; padding: 8px 16px; border-radius: 5px; font-size: 13px; cursor: pointer; text-decoration: none; border: none; }
     .btn-primary   { background: #334466; color: #aaccff; }
     .btn-success   { background: #224422; color: #aaffaa; }
     .btn-secondary { background: #333344; color: #aaaacc; }
     .btn:hover { filter: brightness(1.2); }
     .progress-bar-outer { background: #1a1a2e; border-radius: 6px; height: 10px; overflow: hidden; margin: 6px 0; }
     .progress-bar-inner { height: 100%; background: #558855; border-radius: 6px; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th { text-align: left; padding: 10px 12px; background: #1a1a2e; color: #8888aa; border-bottom: 1px solid #333355; position: sticky; top: 0; }
-    td { padding: 10px 12px; border-bottom: 1px solid #222233; vertical-align: top; }
-    tr.seg-row:hover td { background: #1e1e35; }
     .text-muted { color: #666688; font-size: 12px; }
     .flex { display: flex; align-items: center; gap: 12px; }
     .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-    .status-select {
-      background: #1a1a2e; color: #cccccc; border: 1px solid #444466;
-      border-radius: 4px; padding: 4px 8px; font-size: 12px; width: 100%; cursor: pointer;
-    }
+    .spinner { text-align: center; padding: 48px; color: #666688; }
+    .mono { font-family: 'Consolas', monospace; }
     .filter-btn { font-size: 12px; padding: 4px 12px; }
     .filter-btn.active { background: #334466; color: #aaccff; }
-    .spinner { text-align: center; padding: 48px; color: #666688; }
-    .mono { font-family: 'Consolas', monospace; white-space: pre-wrap; }
 
-    /* Status row tints */
-    tr[data-status="translated"]   td { background: #1a2a1a; }
-    tr[data-status="edited"]       td { background: #1a1a2a; }
-    tr[data-status="approved"]     td { background: #1e1a2a; }
-    tr[data-status="translated"]:hover td { background: #1e301e; }
-    tr[data-status="edited"]:hover     td { background: #1e1e30; }
-    tr[data-status="approved"]:hover   td { background: #241e30; }
+    /* ── Segment rows ── */
+    .seg-row {
+      background: #252540; border: 1px solid #333355;
+      border-radius: 6px; margin-bottom: 6px; overflow: hidden;
+    }
+    .seg-row[data-status="translated"]  { border-color: #2a4a2a; background: #1e2e1e; }
+    .seg-row[data-status="edited"]      { border-color: #2a2a4a; background: #1e1e2e; }
+    .seg-row[data-status="approved"]    { border-color: #3a2a4a; background: #221a2e; }
+
+    .seg-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; cursor: pointer; user-select: none;
+    }
+    .seg-header:hover { background: rgba(255,255,255,0.03); }
+    .seg-num   { color: #555577; font-size: 12px; min-width: 30px; }
+    .seg-char  { color: #aaaaff; font-weight: bold; font-size: 12px; min-width: 110px; }
+    .seg-preview { flex: 1; font-size: 12px; color: #aaaaaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Consolas', monospace; }
+    .seg-status-badge {
+      font-size: 11px; padding: 2px 8px; border-radius: 10px;
+      white-space: nowrap; background: #333344; color: #888899;
+    }
+    .seg-chevron { color: #555577; font-size: 12px; transition: transform 0.2s; }
+
+    /* ── Expanded editor ── */
+    .seg-editor { display: none; padding: 0 14px 14px; }
+    .seg-editor.open { display: block; }
+    .editor-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+    .col-label { font-size: 11px; color: #666688; font-style: italic; margin-bottom: 4px; }
+    .chunk-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .orig-box {
+      background: #1a1a1a; border: 1px solid #333344; border-radius: 4px;
+      padding: 8px 10px; font-family: 'Consolas', monospace; font-size: 12px;
+      color: #bbbbbb; min-height: 50px; white-space: pre-wrap;
+    }
+    .trans-box {
+      background: #1a2a1a; border: 1px solid #445544; border-radius: 4px;
+      padding: 8px 10px; font-family: 'Consolas', monospace; font-size: 12px;
+      color: #e0e0e0; min-height: 50px; width: 100%; resize: vertical;
+      outline: none; transition: border-color 0.15s;
+    }
+    .trans-box:focus { border-color: #558855; }
+    .trans-box.warn  { border-color: #aaaa44; background: #2a2a1a; }
+    .trans-box.error { border-color: #aa4444; background: #2a1a1a; }
+    .chunk-label { font-size: 10px; color: #444466; font-family: 'Consolas', monospace; margin-bottom: 2px; }
+    .len-indicator { font-size: 10px; text-align: right; margin-top: 2px; }
+
+    .editor-footer { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .status-select {
+      background: #1a1a2e; color: #cccccc; border: 1px solid #444466;
+      border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer;
+    }
+    .save-indicator { font-size: 11px; color: #555577; }
+    .save-indicator.saving  { color: #aaaa44; }
+    .save-indicator.saved   { color: #44aa44; }
+    .save-indicator.error   { color: #aa4444; }
+
+    /* Color tag rendering */
+    .c-red   { color: #ff6b6b; background: rgba(255,107,107,0.1); border-radius: 2px; padding: 0 1px; }
+    .c-blue  { color: #6b9fff; background: rgba(107,159,255,0.1); border-radius: 2px; padding: 0 1px; }
+    .c-green { color: #6bff8a; background: rgba(107,255,138,0.1); border-radius: 2px; padding: 0 1px; }
+    .c-yellow{ color: #ffe06b; background: rgba(255,224,107,0.1); border-radius: 2px; padding: 0 1px; }
+    .tag-badge { background:#2a2a44; color:#8888cc; font-size:9px; border-radius:2px; padding:0 3px; }
   </style>
 </head>
 <body>
@@ -60,72 +100,57 @@
 </nav>
 
 <div class="container">
-  <div class="flex-between" style="margin-bottom: 20px;">
+  <div class="flex-between" style="margin-bottom:16px;">
     <div>
       <h1 id="fileName">Загрузка...</h1>
+      <p class="text-muted" id="fileDesc"></p>
       <p class="text-muted" id="fileDate"></p>
     </div>
     <div class="flex">
-      <button class="btn btn-success" onclick="downloadFile()">⬇ Скачать .myformat</button>
-      <a href="/upload" class="btn btn-primary" onclick="sessionStorage.setItem('uploadRedirect', location.href); return true;">⬆ Обновить</a>
+      <button class="btn btn-success" onclick="downloadFile()">⬇ .myformat</button>
     </div>
   </div>
 
   <!-- Stats -->
-  <div class="card" style="margin-bottom: 20px;" id="statsCard">
-    <div class="flex-between" style="margin-bottom: 8px;">
-      <span style="color:#aaaadd;">Прогресс файла</span>
+  <div class="card" style="margin-bottom:16px;">
+    <div class="flex-between" style="margin-bottom:6px;">
+      <span style="color:#aaaadd;">Прогресс</span>
       <span id="pctText" style="color:#aaffaa;">—</span>
     </div>
-    <div class="progress-bar-outer" style="height:12px;margin-bottom:12px;">
+    <div class="progress-bar-outer" style="height:12px;margin-bottom:10px;">
       <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
     </div>
-    <div class="flex" style="gap:24px;flex-wrap:wrap;">
+    <div class="flex" style="gap:20px;flex-wrap:wrap;">
       <span class="text-muted">Всего: <strong id="statTotal" style="color:#ccc">—</strong></span>
-      <span style="color:#888888;">⬜ <strong id="statUntranslated">—</strong></span>
-      <span style="color:#558855;">🟩 <strong id="statTranslated">—</strong></span>
-      <span style="color:#555588;">🟦 <strong id="statEdited">—</strong></span>
-      <span style="color:#885588;">🟪 <strong id="statApproved">—</strong></span>
+      <span style="color:#888888;">⬜ <strong id="statUnt">—</strong></span>
+      <span style="color:#558855;">🟩 <strong id="statTr">—</strong></span>
+      <span style="color:#555588;">🟦 <strong id="statEd">—</strong></span>
+      <span style="color:#885588;">🟪 <strong id="statAp">—</strong></span>
     </div>
   </div>
 
   <!-- Filter -->
-  <div class="flex" style="margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+  <div class="flex" style="margin-bottom:14px;flex-wrap:wrap;gap:8px;">
     <span style="color:#888899;font-size:13px;">Фильтр:</span>
     <button class="btn btn-secondary filter-btn active" data-filter="all">Все</button>
-    <button class="btn btn-secondary filter-btn" data-filter="untranslated">⬜ Не переведено</button>
-    <button class="btn btn-secondary filter-btn" data-filter="translated">🟩 Переведено</button>
-    <button class="btn btn-secondary filter-btn" data-filter="edited">🟦 Отредактировано</button>
-    <button class="btn btn-secondary filter-btn" data-filter="approved">🟪 Одобрено</button>
+    <button class="btn btn-secondary filter-btn" data-filter="untranslated">⬜</button>
+    <button class="btn btn-secondary filter-btn" data-filter="translated">🟩</button>
+    <button class="btn btn-secondary filter-btn" data-filter="edited">🟦</button>
+    <button class="btn btn-secondary filter-btn" data-filter="approved">🟪</button>
   </div>
 
-  <!-- Table -->
   <div id="spinner" class="spinner">Загрузка сегментов...</div>
-  <div id="tableWrap" style="display:none;">
-    <div class="card" style="padding:0;overflow:hidden;">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:40px;">#</th>
-            <th style="width:110px;">Персонаж</th>
-            <th>Оригинал (EN)</th>
-            <th>Перевод (RU)</th>
-            <th style="width:185px;">Статус</th>
-          </tr>
-        </thead>
-        <tbody id="segBody"></tbody>
-      </table>
-    </div>
-  </div>
+  <div id="segList"></div>
 </div>
 
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
 const SUPABASE_URL = 'https://miyytqwqfjrtkbwqyiuy.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1peXl0cXdxZmpydGtid3F5aXV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5NTcxNzAsImV4cCI6MjEwMzUzMzE3MH0.zhCMyP5wDrt_5mTM8qYNyj0GyOVqPbEOvXd7Hckym6o'
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
+// ── Constants ──
+const MAX_LINE_PX = 355
 const TAG_RE = /<[^>]+>/g
 const CHARACTER_TAGS = {
   '<E041 1 0>':'Рюноскэ','<E041 3 2>':'Сусато','<E041 4 4>':'Айрис',
@@ -136,128 +161,319 @@ const CHARACTER_TAGS = {
   '<E041 75 24>':'Пристав','<E041 15 15>':'Судья','<E041 16 8>':'ван Зикс',
   '<E041 6 7>':'ван Зикс','<E041 97 60>':'Нэш (высокий)','<E041 94 58>':'Грейдон',
 }
-const STATUS_LABELS = {
-  untranslated: '⬜ Не переведено',
-  translated:   '🟩 Переведено',
-  edited:       '🟦 Отредактировано',
-  approved:     '🟪 Одобрено',
+const STATUS_LABELS = { untranslated:'⬜ Не переведено', translated:'🟩 Переведено', edited:'🟦 Отредактировано', approved:'🟪 Одобрено' }
+const COLOR_TAGS = { '<E006>':'red','<E007>':'blue','<E008>':'green','<E009>':'yellow' }
+const COLOR_CLOSE = '<E005>'
+const BADGE_TAGS  = { '<E025':'spd','<E085':'wait','<E330':'shk','<E331':'shk','<E332':'shk','<E333':'shk','<E334':'shk','<E341':'anim','<E346':'anim','<E043':'sty','<E044':'sty','<E169':'lip','<E145':'exp','<E603':'sfx','<E606':'sfx','<E092':'cam' }
+
+function cleanText(s) { return s.replace(TAG_RE,' ').replace(/\s+/g,' ').trim() }
+function extractCharacter(s) { for (const [t,n] of Object.entries(CHARACTER_TAGS)) if (s.includes(t)) return n; return '' }
+
+// ── Chunk parsing ──
+function parseChunks(segment) {
+  const parts = segment.split(/(<[^>]+>)/)
+  const chunks = []
+  let prefixTags = '', currentText = ''
+
+  function flush(closingTag) {
+    const text = currentText.trim()
+    if (text) chunks.push({ prefixTags, text, pauseTag: closingTag })
+    prefixTags = ''; currentText = ''
+  }
+
+  for (const token of parts) {
+    if (!token) continue
+    if (/^<[^>]+>$/.test(token)) {
+      if (currentText.trim()) { flush(token); prefixTags = token }
+      else prefixTags += token
+    } else {
+      currentText += token
+    }
+  }
+  flush('')
+  return chunks
 }
 
-function cleanText(seg) { return seg.replace(TAG_RE,' ').replace(/\s+/g,' ').trim() }
-function extractCharacter(seg) {
-  for (const [tag,name] of Object.entries(CHARACTER_TAGS))
-    if (seg.includes(tag)) return name
-  return ''
+// ── Rich HTML for original panel ──
+function renderOrigHTML(prefixTags, text) {
+  // Determine active color from prefix
+  let activeColor = null
+  for (const tag of (prefixTags.match(/<[^>]+>/g) || [])) {
+    if (COLOR_TAGS[tag]) activeColor = COLOR_TAGS[tag]
+    else if (tag === COLOR_CLOSE) activeColor = null
+  }
+
+  let html = activeColor ? `<span class="c-${activeColor}">` : ''
+  const tokens = text.split(/(<[^>]+>)/)
+  for (const token of tokens) {
+    if (!token) continue
+    if (/^<[^>]+>$/.test(token)) {
+      if (COLOR_TAGS[token]) {
+        if (activeColor) html += '</span>'
+        activeColor = COLOR_TAGS[token]
+        html += `<span class="c-${activeColor}">`
+      } else if (token === COLOR_CLOSE) {
+        if (activeColor) html += '</span>'
+        activeColor = null
+      } else {
+        for (const [pfx, lbl] of Object.entries(BADGE_TAGS))
+          if (token.startsWith(pfx)) { html += `<span class="tag-badge">[${lbl}]</span>`; break }
+      }
+    } else {
+      html += token.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')
+    }
+  }
+  if (activeColor) html += '</span>'
+  return html
 }
 
+// ── Line length (approximate, canvas-based) ──
+const _canvas = document.createElement('canvas')
+const _ctx    = _canvas.getContext('2d')
+_ctx.font     = '16px "Palatino Linotype", "Book Antiqua", Palatino, serif'
+function lineWidth(text) { return _ctx.measureText(text.replace(TAG_RE,'')).width }
+function lineLengthLevel(text) {
+  if (!text.trim()) return { level:'', px:0 }
+  const maxPx = Math.max(...text.split('\n').map(l => lineWidth(l)))
+  if (maxPx > MAX_LINE_PX)     return { level:'error', px: Math.round(maxPx) }
+  if (maxPx > MAX_LINE_PX - 30) return { level:'warn',  px: Math.round(maxPx) }
+  return { level:'ok', px: Math.round(maxPx) }
+}
+
+// ── State ──
 const params  = new URLSearchParams(location.search)
 const fileId  = parseInt(params.get('id'))
 let fileData  = null
 let segments  = []
 let currentFilter = 'all'
+const saveTimers = {}
 
+// ── Load ──
 async function load() {
   const { data: f } = await db.from('files').select('*').eq('id', fileId).single()
   fileData = f
   document.getElementById('fileName').textContent = f.name
-  document.getElementById('fileDate').textContent = 'Загружен: ' + f.uploaded_at.slice(0,10)
+  document.getElementById('fileDesc').textContent  = f.description || ''
+  document.getElementById('fileDate').textContent  = 'Загружен: ' + f.uploaded_at.slice(0,10)
   document.title = 'TGAA — ' + f.name
 
-  // Load segments in pages to handle large files
   let allSegs = [], from = 0
   while (true) {
-    const { data } = await db.from('segments')
-      .select('*').eq('file_id', fileId).order('seg_index')
-      .range(from, from + 999)
-    if (!data || data.length === 0) break
+    const { data } = await db.from('segments').select('*').eq('file_id', fileId).order('seg_index').range(from, from+999)
+    if (!data || !data.length) break
     allSegs = allSegs.concat(data)
     if (data.length < 1000) break
     from += 1000
   }
   segments = allSegs
-
-  updateStats()
-  renderTable()
   document.getElementById('spinner').style.display = 'none'
-  document.getElementById('tableWrap').style.display = 'block'
+  updateStats()
+  renderAll()
 }
 
 function updateStats() {
-  const counts = { untranslated:0, translated:0, edited:0, approved:0 }
-  for (const s of segments) counts[s.status] = (counts[s.status]||0) + 1
-  const total = segments.length
-  const done  = total - counts.untranslated
-  const pct   = total ? Math.round(done/total*100) : 0
-  document.getElementById('progressBar').style.width = pct + '%'
+  const c = { untranslated:0, translated:0, edited:0, approved:0 }
+  for (const s of segments) c[s.status] = (c[s.status]||0)+1
+  const total = segments.length, done = total - c.untranslated
+  const pct = total ? Math.round(done/total*100) : 0
+  document.getElementById('progressBar').style.width = pct+'%'
   document.getElementById('pctText').textContent = pct + '% переведено'
-  document.getElementById('statTotal').textContent        = total
-  document.getElementById('statUntranslated').textContent = counts.untranslated
-  document.getElementById('statTranslated').textContent   = counts.translated
-  document.getElementById('statEdited').textContent       = counts.edited
-  document.getElementById('statApproved').textContent     = counts.approved
+  document.getElementById('statTotal').textContent = total
+  document.getElementById('statUnt').textContent = c.untranslated
+  document.getElementById('statTr').textContent  = c.translated
+  document.getElementById('statEd').textContent  = c.edited
+  document.getElementById('statAp').textContent  = c.approved
 }
 
-function renderTable() {
-  const tbody = document.getElementById('segBody')
-  tbody.innerHTML = ''
-  segments.forEach((seg, i) => {
-    const translations = Array.isArray(seg.translations) ? seg.translations : []
-    const combined = translations.map(t => t.replace(TAG_RE,'').trim()).filter(Boolean).join(' ')
-    const character = extractCharacter(seg.raw_segment)
-    const original  = cleanText(seg.raw_segment)
+// ── Render segment list ──
+function renderAll() {
+  const list = document.getElementById('segList')
+  list.innerHTML = ''
+  segments.forEach((seg, i) => list.appendChild(makeSegRow(seg, i)))
+}
 
-    const tr = document.createElement('tr')
-    tr.className = 'seg-row'
-    tr.dataset.status = seg.status
-    tr.dataset.id = seg.id
-    tr.style.display = (currentFilter === 'all' || seg.status === currentFilter) ? '' : 'none'
+function makeSegRow(seg, i) {
+  const chunks = parseChunks(seg.raw_segment)
+  const translations = Array.isArray(seg.translations) ? [...seg.translations] : []
+  const character = extractCharacter(seg.raw_segment)
+  const origPreview = cleanText(seg.raw_segment)
+  const transPreview = translations.map(t => t.replace(TAG_RE,'')).filter(Boolean).join(' ')
 
-    const options = Object.entries(STATUS_LABELS)
-      .map(([k,v]) => `<option value="${k}" ${seg.status===k?'selected':''}>${v}</option>`).join('')
+  const wrapper = document.createElement('div')
+  wrapper.className = 'seg-row'
+  wrapper.dataset.status = seg.status
+  wrapper.dataset.id = seg.id
+  wrapper.style.display = (currentFilter === 'all' || seg.status === currentFilter) ? '' : 'none'
 
-    tr.innerHTML = `
-      <td class="text-muted">${i+1}</td>
-      <td style="color:#aaaaff;font-weight:bold;font-size:12px;">${character}</td>
-      <td class="mono" style="color:#bbbbbb;font-size:12px;">${original}</td>
-      <td class="mono" style="color:#ddddcc;font-size:12px;">${combined || '<span class="text-muted">—</span>'}</td>
-      <td><select class="status-select" data-id="${seg.id}">${options}</select></td>`
-    tbody.appendChild(tr)
+  // ── Header ──
+  const header = document.createElement('div')
+  header.className = 'seg-header'
+  header.innerHTML = `
+    <span class="seg-num">${i+1}</span>
+    <span class="seg-char">${character}</span>
+    <span class="seg-preview">${transPreview || origPreview}</span>
+    <span class="seg-status-badge">${STATUS_LABELS[seg.status]}</span>
+    <span class="seg-chevron">▶</span>`
 
-    tr.querySelector('.status-select').addEventListener('change', async e => {
-      const newStatus = e.target.value
-      await db.from('segments').update({ status: newStatus }).eq('id', seg.id)
-      seg.status = newStatus
-      tr.dataset.status = newStatus
-      tr.style.display = (currentFilter === 'all' || newStatus === currentFilter) ? '' : 'none'
-      updateStats()
+  // ── Editor ──
+  const editor = document.createElement('div')
+  editor.className = 'seg-editor'
+
+  // Build chunk pairs
+  const chunkPairsDiv = document.createElement('div')
+
+  chunks.forEach((chunk, ci) => {
+    const pair = document.createElement('div')
+    pair.className = 'chunk-pair'
+
+    // Original side
+    const origWrap = document.createElement('div')
+    const pauseLabel = document.createElement('div')
+    pauseLabel.className = 'chunk-label'
+    pauseLabel.textContent = chunk.pauseTag || '↵ конец'
+    const origBox = document.createElement('div')
+    origBox.className = 'orig-box'
+    origBox.innerHTML = renderOrigHTML(chunk.prefixTags, chunk.text)
+    origWrap.appendChild(origBox)
+    origWrap.appendChild(pauseLabel)
+
+    // Translation side
+    const transWrap = document.createElement('div')
+    const lenDiv = document.createElement('div')
+    lenDiv.className = 'len-indicator'
+    const transBox = document.createElement('textarea')
+    transBox.className = 'trans-box'
+    transBox.rows = 2
+    transBox.value = translations[ci] || ''
+    transBox.placeholder = 'Перевод...'
+
+    // Live length check
+    function updateLen() {
+      const { level, px } = lineLengthLevel(transBox.value)
+      transBox.className = 'trans-box' + (level === 'error' ? ' error' : level === 'warn' ? ' warn' : '')
+      lenDiv.textContent = px ? `${px}/${MAX_LINE_PX}px` : ''
+      lenDiv.style.color = level === 'error' ? '#ff5555' : level === 'warn' ? '#aaaa44' : '#44aa44'
+    }
+    updateLen()
+
+    transBox.addEventListener('input', () => {
+      translations[ci] = transBox.value
+      updateLen()
+      scheduleAutosave(seg, translations, wrapper, header)
     })
+
+    transWrap.appendChild(transBox)
+    transWrap.appendChild(lenDiv)
+
+    pair.appendChild(origWrap)
+    pair.appendChild(transWrap)
+    chunkPairsDiv.appendChild(pair)
   })
+
+  // Footer: status selector + save indicator
+  const footer = document.createElement('div')
+  footer.className = 'editor-footer'
+  const statusSelect = document.createElement('select')
+  statusSelect.className = 'status-select'
+  for (const [k,v] of Object.entries(STATUS_LABELS)) {
+    const opt = document.createElement('option')
+    opt.value = k; opt.textContent = v
+    if (seg.status === k) opt.selected = true
+    statusSelect.appendChild(opt)
+  }
+  statusSelect.addEventListener('change', async () => {
+    seg.status = statusSelect.value
+    wrapper.dataset.status = seg.status
+    updateStatusBadge(header, seg.status)
+    wrapper.className = 'seg-row' + (seg.status !== 'untranslated' ? ` data-status="${seg.status}"` : '')
+    wrapper.setAttribute('data-status', seg.status)
+    await db.from('segments').update({ status: seg.status }).eq('id', seg.id)
+    updateStats()
+    if (currentFilter !== 'all' && seg.status !== currentFilter)
+      wrapper.style.display = 'none'
+  })
+
+  const saveInd = document.createElement('span')
+  saveInd.className = 'save-indicator'
+  saveInd.dataset.saveFor = seg.id
+
+  footer.appendChild(statusSelect)
+  footer.appendChild(saveInd)
+
+  editor.appendChild(chunkPairsDiv)
+  editor.appendChild(footer)
+
+  // Toggle open/close
+  let open = false
+  header.addEventListener('click', () => {
+    open = !open
+    editor.classList.toggle('open', open)
+    header.querySelector('.seg-chevron').textContent = open ? '▼' : '▶'
+  })
+
+  wrapper.appendChild(header)
+  wrapper.appendChild(editor)
+  return wrapper
 }
 
-// Filter buttons
+function updateStatusBadge(header, status) {
+  header.querySelector('.seg-status-badge').textContent = STATUS_LABELS[status]
+}
+
+// ── Autosave ──
+function scheduleAutosave(seg, translations, wrapper, header) {
+  const ind = document.querySelector(`[data-save-for="${seg.id}"]`)
+  if (ind) { ind.className = 'save-indicator saving'; ind.textContent = 'Сохранение...' }
+  clearTimeout(saveTimers[seg.id])
+  saveTimers[seg.id] = setTimeout(async () => {
+    // Auto-promote to translated
+    const hasTranslation = translations.some(t => t.trim())
+    if (hasTranslation && seg.status === 'untranslated') {
+      seg.status = 'translated'
+      wrapper.setAttribute('data-status', 'translated')
+      // Update status badge and select
+      updateStatusBadge(header, 'translated')
+      const sel = wrapper.querySelector('.status-select')
+      if (sel) sel.value = 'translated'
+    }
+    // Update translation preview in header
+    const preview = translations.map(t => t.replace(TAG_RE,'')).filter(Boolean).join(' ')
+    const previewEl = header.querySelector('.seg-preview')
+    if (previewEl) previewEl.textContent = preview || cleanText(seg.raw_segment)
+
+    const { error } = await db.from('segments')
+      .update({ translations, status: seg.status })
+      .eq('id', seg.id)
+
+    if (ind) {
+      if (error) { ind.className = 'save-indicator error'; ind.textContent = 'Ошибка сохранения' }
+      else       { ind.className = 'save-indicator saved'; ind.textContent = '✓ Сохранено' }
+      setTimeout(() => { if (ind) { ind.textContent = ''; ind.className = 'save-indicator' } }, 2000)
+    }
+    seg.translations = [...translations]
+    updateStats()
+  }, 1000)
+}
+
+// ── Filter ──
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
     btn.classList.add('active')
     currentFilter = btn.dataset.filter
-    document.querySelectorAll('.seg-row').forEach(tr => {
-      tr.style.display = (currentFilter === 'all' || tr.dataset.status === currentFilter) ? '' : 'none'
+    document.querySelectorAll('.seg-row').forEach(row => {
+      row.style.display = (currentFilter === 'all' || row.dataset.status === currentFilter) ? '' : 'none'
     })
   })
 })
 
-// Download
+// ── Download ──
 window.downloadFile = async () => {
   const { data: segs } = await db.from('segments').select('*').eq('file_id', fileId).order('seg_index')
-  const data = {
-    raw_script: fileData.raw_script,
-    segments: segs.map(s => ({ raw_segment: s.raw_segment, translations: s.translations, status: s.status }))
-  }
+  const data = { raw_script: fileData.raw_script, segments: segs.map(s => ({ raw_segment: s.raw_segment, translations: s.translations, status: s.status })) }
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(blob)
-  a.download = fileData.name.replace('.txt','') + '.myformat'
-  a.click()
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob)
+  a.download = fileData.name.replace('.txt','') + '.myformat'; a.click()
 }
 
 load()

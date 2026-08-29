@@ -7,21 +7,14 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #cccccc; min-height: 100vh; }
-    nav {
-      background: #0f0f1a; padding: 14px 32px;
-      display: flex; align-items: center; gap: 24px;
-      border-bottom: 1px solid #333355;
-    }
+    nav { background: #0f0f1a; padding: 14px 32px; display: flex; align-items: center; gap: 24px; border-bottom: 1px solid #333355; }
     nav .logo { font-size: 18px; font-weight: bold; color: #aaaaff; text-decoration: none; }
     nav a { color: #888899; text-decoration: none; font-size: 14px; }
     nav a:hover { color: #ccccff; }
     .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
     h1 { font-size: 24px; color: #ccccff; margin-bottom: 8px; }
     .card { background: #252540; border: 1px solid #333355; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
-    .btn {
-      display: inline-block; padding: 8px 16px; border-radius: 5px;
-      font-size: 13px; cursor: pointer; text-decoration: none; border: none;
-    }
+    .btn { display: inline-block; padding: 8px 16px; border-radius: 5px; font-size: 13px; cursor: pointer; text-decoration: none; border: none; }
     .btn-primary   { background: #334466; color: #aaccff; }
     .btn-success   { background: #224422; color: #aaffaa; }
     .btn-danger    { background: #442222; color: #ffaaaa; }
@@ -35,32 +28,27 @@
     tr:hover td { background: #1e1e35; }
     .text-muted { color: #666688; font-size: 12px; }
     .flex { display: flex; align-items: center; gap: 12px; }
-    .flex-between { display: flex; justify-content: space-between; align-items: center; }
-    .empty-state { text-align: center; padding: 48px; color: #555577; }
+    .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
     .spinner { text-align: center; padding: 48px; color: #666688; font-size: 14px; }
-
-    /* Upload modal */
-    .modal-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.7); z-index: 100;
-      justify-content: center; align-items: center;
-    }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; }
     .modal-overlay.open { display: flex; }
-    .modal {
-      background: #252540; border: 1px solid #333355; border-radius: 10px;
-      padding: 28px; width: 480px; max-width: 95vw;
-    }
+    .modal { background: #252540; border: 1px solid #333355; border-radius: 10px; padding: 28px; width: 500px; max-width: 95vw; }
     .modal h2 { color: #aaaadd; margin-bottom: 16px; }
     .modal p  { color: #8888aa; font-size: 13px; margin-bottom: 20px; }
-    .file-input-label {
-      display: block; border: 2px dashed #334466; border-radius: 6px;
-      padding: 24px; text-align: center; cursor: pointer; color: #6688aa;
-      font-size: 14px; margin-bottom: 16px; transition: border-color 0.2s;
-    }
+    .file-input-label { display: block; border: 2px dashed #334466; border-radius: 6px; padding: 24px; text-align: center; cursor: pointer; color: #6688aa; font-size: 14px; margin-bottom: 12px; transition: border-color 0.2s; }
     .file-input-label:hover { border-color: #5577aa; color: #aaccff; }
     #fileInput { display: none; }
-    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
-    #uploadStatus { font-size: 13px; margin-top: 10px; min-height: 18px; }
+    .field-label { display: block; color: #aaaacc; margin-bottom: 6px; font-size: 13px; }
+    input[type=text], textarea {
+      width: 100%; background: #1a1a2e; color: #cccccc;
+      border: 1px solid #444466; border-radius: 5px;
+      padding: 8px 10px; font-size: 13px; font-family: inherit;
+      margin-bottom: 14px;
+    }
+    textarea { resize: vertical; min-height: 60px; }
+    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+    #uploadStatus { font-size: 13px; margin-top: 8px; min-height: 18px; }
+    .file-desc { color: #7777aa; font-size: 12px; font-style: italic; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -89,9 +77,8 @@
     </div>
   </div>
 
-  <!-- File table -->
   <div id="spinner" class="spinner">Загрузка...</div>
-  <div id="emptyState" class="empty-state" style="display:none;">
+  <div id="emptyState" style="display:none; text-align:center; padding:48px; color:#555577;">
     <p style="font-size:18px;margin-bottom:12px;">Файлов пока нет</p>
     <button class="btn btn-primary" onclick="openUpload()">Загрузить первый файл</button>
   </div>
@@ -103,10 +90,10 @@
             <th>Файл</th>
             <th>Прогресс</th>
             <th style="width:70px;">Всего</th>
-            <th style="width:110px;">Переведено</th>
-            <th style="width:120px;">Отредактировано</th>
+            <th style="width:100px;">Переведено</th>
+            <th style="width:115px;">Отредактировано</th>
             <th style="width:80px;">Одобрено</th>
-            <th style="width:110px;">Загружен</th>
+            <th style="width:100px;">Загружен</th>
             <th style="width:130px;"></th>
           </tr>
         </thead>
@@ -126,6 +113,8 @@
       <span id="fileLabel">Нажмите или перетащите файл сюда</span>
     </label>
     <input type="file" id="fileInput" accept=".txt,.myformat,.json">
+    <label class="field-label">Описание файла (необязательно):</label>
+    <textarea id="fileDesc" placeholder="Например: Эпизод 1, Акт 2 — сцена в суде"></textarea>
     <div id="uploadStatus"></div>
     <div class="modal-btns">
       <button class="btn btn-secondary" onclick="closeUpload()">Отмена</button>
@@ -136,7 +125,6 @@
 
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
 const SUPABASE_URL = 'https://miyytqwqfjrtkbwqyiuy.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1peXl0cXdxZmpydGtid3F5aXV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5NTcxNzAsImV4cCI6MjEwMzUzMzE3MH0.zhCMyP5wDrt_5mTM8qYNyj0GyOVqPbEOvXd7Hckym6o'
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
@@ -151,36 +139,24 @@ const CHARACTER_TAGS = {
   '<E041 75 24>':'Пристав','<E041 15 15>':'Судья','<E041 16 8>':'ван Зикс',
   '<E041 6 7>':'ван Зикс','<E041 97 60>':'Нэш (высокий)','<E041 94 58>':'Грейдон',
 }
-
-function cleanText(seg) {
-  return seg.replace(TAG_RE, ' ').replace(/\s+/g, ' ').trim()
-}
-
-function extractCharacter(seg) {
-  for (const [tag, name] of Object.entries(CHARACTER_TAGS))
-    if (seg.includes(tag)) return name
+function cleanText(s) { return s.replace(TAG_RE,' ').replace(/\s+/g,' ').trim() }
+function extractCharacter(s) {
+  for (const [t,n] of Object.entries(CHARACTER_TAGS)) if (s.includes(t)) return n
   return null
 }
 
-// ── Load files ──
 async function loadFiles() {
   const { data: files } = await db.from('files').select('*').order('uploaded_at', { ascending: false })
-  const { data: segs } = await db.from('segments').select('file_id, status')
-
+  const { data: segs }  = await db.from('segments').select('file_id, status')
   document.getElementById('spinner').style.display = 'none'
-
-  if (!files || files.length === 0) {
-    document.getElementById('emptyState').style.display = 'block'
-    return
-  }
+  if (!files || files.length === 0) { document.getElementById('emptyState').style.display = 'block'; return }
   document.getElementById('tableWrap').style.display = 'block'
 
-  // Compute stats per file
   const statsMap = {}
-  for (const s of (segs || [])) {
+  for (const s of (segs||[])) {
     if (!statsMap[s.file_id]) statsMap[s.file_id] = { total:0, untranslated:0, translated:0, edited:0, approved:0 }
     statsMap[s.file_id].total++
-    statsMap[s.file_id][s.status] = (statsMap[s.file_id][s.status] || 0) + 1
+    statsMap[s.file_id][s.status] = (statsMap[s.file_id][s.status]||0) + 1
   }
 
   let totalAll = 0, translatedAll = 0
@@ -189,14 +165,17 @@ async function loadFiles() {
 
   for (const f of files) {
     const s = statsMap[f.id] || { total:0, untranslated:0, translated:0, edited:0, approved:0 }
-    const done = s.total - (s.untranslated || 0)
-    const pct = s.total ? Math.round(done / s.total * 100) : 0
+    const done = s.total - (s.untranslated||0)
+    const pct  = s.total ? Math.round(done/s.total*100) : 0
     totalAll += s.total; translatedAll += done
 
     const tr = document.createElement('tr')
     tr.innerHTML = `
-      <td><a href="file.html?id=${f.id}" style="color:#aaaaff;text-decoration:none;">${f.name}</a></td>
-      <td style="min-width:140px;">
+      <td>
+        <a href="file.html?id=${f.id}" style="color:#aaaaff;text-decoration:none;font-weight:bold;">${f.name}</a>
+        ${f.description ? `<div class="file-desc">${f.description}</div>` : ''}
+      </td>
+      <td style="min-width:130px;">
         <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pct}%"></div></div>
         <span class="text-muted">${pct}%</span>
       </td>
@@ -207,114 +186,85 @@ async function loadFiles() {
       <td class="text-muted">${f.uploaded_at.slice(0,10)}</td>
       <td>
         <div class="flex">
-          <button class="btn btn-success" style="font-size:11px;padding:4px 10px;" onclick="downloadFile(${f.id},'${f.name}')">⬇ .myformat</button>
+          <button class="btn btn-success" style="font-size:11px;padding:4px 10px;" onclick="downloadFile(${f.id},'${f.name}')">⬇</button>
           <button class="btn btn-danger"  style="font-size:11px;padding:4px 10px;" onclick="deleteFile(${f.id})">✕</button>
         </div>
       </td>`
     tbody.appendChild(tr)
   }
 
-  const overallPct = totalAll ? Math.round(translatedAll / totalAll * 100) : 0
-  document.getElementById('overallBar').style.width = overallPct + '%'
-  document.getElementById('overallText').textContent = `${translatedAll} / ${totalAll} сегментов (${overallPct}%)`
+  const pct = totalAll ? Math.round(translatedAll/totalAll*100) : 0
+  document.getElementById('overallBar').style.width = pct + '%'
+  document.getElementById('overallText').textContent = `${translatedAll} / ${totalAll} сегментов (${pct}%)`
 }
 
-// ── Upload ──
 window.openUpload  = () => document.getElementById('uploadModal').classList.add('open')
 window.closeUpload = () => document.getElementById('uploadModal').classList.remove('open')
-
 document.getElementById('fileInput').addEventListener('change', e => {
-  const name = e.target.files[0]?.name || 'файл не выбран'
-  document.getElementById('fileLabel').textContent = name
+  document.getElementById('fileLabel').textContent = e.target.files[0]?.name || 'файл не выбран'
 })
 
 window.doUpload = async () => {
   const file = document.getElementById('fileInput').files[0]
-  if (!file) { setStatus('Выберите файл', 'red'); return }
-  setStatus('Обработка...', '#aaaaff')
+  if (!file) { setStatus('Выберите файл','#ff6666'); return }
+  const desc = document.getElementById('fileDesc').value.trim()
+  setStatus('Обработка...','#aaaaff')
   document.getElementById('uploadBtn').disabled = true
 
   const text = await file.text()
   let rawScript = '', savedSegments = []
-
   if (file.name.endsWith('.myformat') || file.name.endsWith('.json')) {
     const data = JSON.parse(text)
     rawScript = data.raw_script || ''
     savedSegments = data.segments || []
-  } else {
-    rawScript = text
-  }
+  } else { rawScript = text }
 
-  if (!rawScript.trim()) { setStatus('Пустой файл', 'red'); return }
+  if (!rawScript.trim()) { setStatus('Пустой файл','#ff6666'); document.getElementById('uploadBtn').disabled = false; return }
 
-  // Upsert file
-  const { data: existing } = await db.from('files').select('id').eq('name', file.name).single()
+  const { data: existing } = await db.from('files').select('id').eq('name', file.name).maybeSingle()
   let fileId
-
   if (existing) {
     fileId = existing.id
     await db.from('segments').delete().eq('file_id', fileId)
-    await db.from('files').update({ raw_script: rawScript, uploaded_at: new Date().toISOString() }).eq('id', fileId)
+    await db.from('files').update({ raw_script: rawScript, uploaded_at: new Date().toISOString(), description: desc || undefined }).eq('id', fileId)
   } else {
-    const { data: newFile } = await db.from('files')
-      .insert({ name: file.name, raw_script: rawScript, uploaded_at: new Date().toISOString() })
+    const { data: newFile, error } = await db.from('files')
+      .insert({ name: file.name, raw_script: rawScript, uploaded_at: new Date().toISOString(), description: desc })
       .select().single()
+    if (error) { setStatus('Ошибка: ' + error.message, '#ff6666'); document.getElementById('uploadBtn').disabled = false; return }
     fileId = newFile.id
   }
 
-  // Parse and insert segments
   const allSegs = rawScript.split('<PAGE>')
   const rows = []
   let rowIdx = 0
-  for (let segIdx = 0; segIdx < allSegs.length; segIdx++) {
-    const seg = allSegs[segIdx]
-    if (!cleanText(seg)) continue
+  for (let i = 0; i < allSegs.length; i++) {
+    if (!cleanText(allSegs[i])) continue
     const saved = savedSegments[rowIdx] || {}
-    rows.push({
-      file_id:      fileId,
-      seg_index:    segIdx,
-      raw_segment:  seg,
-      translations: saved.translations || [],
-      status:       saved.status || 'untranslated',
-    })
+    rows.push({ file_id: fileId, seg_index: i, raw_segment: allSegs[i], translations: saved.translations || [], status: saved.status || 'untranslated' })
     rowIdx++
   }
-
-  // Insert in batches of 200
   for (let i = 0; i < rows.length; i += 200)
-    await db.from('segments').insert(rows.slice(i, i + 200))
+    await db.from('segments').insert(rows.slice(i, i+200))
 
-  setStatus('Готово! ✓', '#aaffaa')
-  setTimeout(() => { closeUpload(); loadFiles() }, 800)
-  document.getElementById('uploadBtn').disabled = false
+  setStatus('Готово! ✓','#aaffaa')
+  setTimeout(() => { closeUpload(); loadFiles(); document.getElementById('uploadBtn').disabled = false }, 800)
 }
 
 function setStatus(msg, color) {
   const el = document.getElementById('uploadStatus')
-  el.textContent = msg
-  el.style.color = color
+  el.textContent = msg; el.style.color = color
 }
 
-// ── Download ──
 window.downloadFile = async (fileId, fileName) => {
   const { data: f }    = await db.from('files').select('*').eq('id', fileId).single()
   const { data: segs } = await db.from('segments').select('*').eq('file_id', fileId).order('seg_index')
-  const data = {
-    raw_script: f.raw_script,
-    segments: segs.map(s => ({
-      raw_segment:  s.raw_segment,
-      translations: s.translations,
-      status:       s.status,
-    }))
-  }
+  const data = { raw_script: f.raw_script, segments: segs.map(s => ({ raw_segment: s.raw_segment, translations: s.translations, status: s.status })) }
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
   const a = document.createElement('a')
-  a.href = URL.createObjectURL(blob)
-  a.download = fileName.replace('.txt','') + '.myformat'
-  a.click()
+  a.href = URL.createObjectURL(blob); a.download = fileName.replace('.txt','') + '.myformat'; a.click()
 }
 
-// ── Delete ──
 window.deleteFile = async (fileId) => {
   if (!confirm('Удалить файл и все сегменты?')) return
   await db.from('segments').delete().eq('file_id', fileId)
