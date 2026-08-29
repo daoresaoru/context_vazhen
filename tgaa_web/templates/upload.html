@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 style="margin-bottom: 24px;">⬆ Загрузить файл</h1>
+
+<div class="card" style="max-width: 600px;">
+  <p style="color: #8888aa; margin-bottom: 20px; font-size: 14px;">
+    Загрузите сырой скрипт (.txt) или уже переведённый файл (.myformat / .json).<br>
+    Если файл с таким именем уже существует, он будет обновлён.
+  </p>
+  <form method="POST" enctype="multipart/form-data">
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; color: #aaaacc; margin-bottom: 8px; font-size: 14px;">
+        Выберите файл:
+      </label>
+      <input type="file" name="file" accept=".txt,.myformat,.json"
+             style="color: #cccccc; font-size: 14px; width: 100%;">
+    </div>
+    <button type="submit" class="btn btn-primary" style="font-size: 14px; padding: 10px 24px;">
+      Загрузить
+    </button>
+    <a href="/" class="btn btn-secondary" style="margin-left: 8px; font-size: 14px; padding: 10px 24px;">
+      Отмена
+    </a>
+  </form>
+</div>
+
+{% endblock %}

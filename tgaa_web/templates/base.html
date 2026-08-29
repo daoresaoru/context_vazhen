@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TGAA Translation Hub</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #cccccc;
+      min-height: 100vh;
+    }
+    nav {
+      background: #0f0f1a;
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      border-bottom: 1px solid #333355;
+    }
+    nav .logo {
+      font-size: 18px;
+      font-weight: bold;
+      color: #aaaaff;
+      text-decoration: none;
+    }
+    nav a {
+      color: #888899;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    nav a:hover { color: #ccccff; }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    h1 { font-size: 24px; color: #ccccff; margin-bottom: 8px; }
+    h2 { font-size: 18px; color: #aaaadd; margin-bottom: 16px; }
+    .card {
+      background: #252540;
+      border: 1px solid #333355;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 5px;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+    }
+    .btn-primary   { background: #334466; color: #aaccff; }
+    .btn-success   { background: #224422; color: #aaffaa; }
+    .btn-danger    { background: #442222; color: #ffaaaa; }
+    .btn-secondary { background: #333344; color: #aaaacc; }
+    .btn:hover { filter: brightness(1.2); }
+    .progress-bar-outer {
+      background: #1a1a2e;
+      border-radius: 6px;
+      height: 10px;
+      overflow: hidden;
+      margin: 6px 0;
+    }
+    .progress-bar-inner {
+      height: 100%;
+      background: #558855;
+      border-radius: 6px;
+      transition: width 0.3s;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      text-align: left;
+      padding: 10px 12px;
+      background: #1a1a2e;
+      color: #8888aa;
+      border-bottom: 1px solid #333355;
+    }
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #222233;
+      vertical-align: top;
+    }
+    tr:hover td { background: #1e1e35; }
+    .status-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+    .text-muted { color: #666688; font-size: 12px; }
+    .flex { display: flex; align-items: center; gap: 12px; }
+    .flex-between { display: flex; justify-content: space-between; align-items: center; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="logo" href="/">⚖️ TGAA Translation Hub</a>
+    <a href="/">Файлы</a>
+    <a href="/upload">Загрузить</a>
+  </nav>
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>
