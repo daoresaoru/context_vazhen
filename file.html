@@ -440,6 +440,8 @@ function scheduleAutosave(seg, translations, wrapper, header) {
     const preview = translations.map(t => t.replace(TAG_RE,'')).filter(Boolean).join(' ')
     const previewEl = header.querySelector('.seg-preview')
     if (previewEl) previewEl.textContent = preview || cleanText(seg.raw_segment)
+    const prevBox = document.querySelector(`[data-preview-for="${seg.id}"]`)
+    if (prevBox) prevBox.textContent = preview
 
     const { error } = await db.from('segments')
       .update({ translations, status: seg.status })
@@ -452,6 +454,7 @@ function scheduleAutosave(seg, translations, wrapper, header) {
     }
     seg.translations = [...translations]
     updateStats()
+    
   }, 1000)
 }
 
