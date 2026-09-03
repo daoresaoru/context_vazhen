@@ -215,6 +215,11 @@ window.openNamePicker = () => {
 
 // ── Team management ──
 window.openTeamModal = async () => {
+  const pwd = prompt('Введите пароль администратора:')
+  if (pwd !== 'Лестрейд') {
+    alert('Неверный пароль.')
+    return
+  }
   document.getElementById('teamModal').classList.add('open')
   await refreshMemberList()
 }
