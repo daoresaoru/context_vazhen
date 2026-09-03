@@ -11,6 +11,8 @@
     nav .logo { font-size: 18px; font-weight: bold; color: #aaaaff; text-decoration: none; }
     nav a { color: #888899; text-decoration: none; font-size: 14px; }
     nav a:hover { color: #ccccff; }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+    .current-user { font-size: 13px; color: #aaaaff; }
     .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
     h1 { font-size: 24px; color: #ccccff; margin-bottom: 8px; }
     .card { background: #252540; border: 1px solid #333355; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
@@ -30,31 +32,52 @@
     .flex { display: flex; align-items: center; gap: 12px; }
     .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
     .spinner { text-align: center; padding: 48px; color: #666688; font-size: 14px; }
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; }
+    .file-desc { color: #7777aa; font-size: 12px; font-style: italic; margin-top: 2px; }
+
+    /* Modals */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; }
     .modal-overlay.open { display: flex; }
-    .modal { background: #252540; border: 1px solid #333355; border-radius: 10px; padding: 28px; width: 500px; max-width: 95vw; }
-    .modal h2 { color: #aaaadd; margin-bottom: 16px; }
-    .modal p  { color: #8888aa; font-size: 13px; margin-bottom: 20px; }
-    .file-input-label { display: block; border: 2px dashed #334466; border-radius: 6px; padding: 24px; text-align: center; cursor: pointer; color: #6688aa; font-size: 14px; margin-bottom: 12px; transition: border-color 0.2s; }
-    .file-input-label:hover { border-color: #5577aa; color: #aaccff; }
-    #fileInput { display: none; }
-    .field-label { display: block; color: #aaaacc; margin-bottom: 6px; font-size: 13px; }
+    .modal { background: #252540; border: 1px solid #333355; border-radius: 10px; padding: 28px; width: 480px; max-width: 95vw; }
+    .modal h2 { color: #aaaadd; margin-bottom: 8px; }
+    .modal p  { color: #8888aa; font-size: 13px; margin-bottom: 16px; }
+    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
     input[type=text], textarea {
       width: 100%; background: #1a1a2e; color: #cccccc;
       border: 1px solid #444466; border-radius: 5px;
-      padding: 8px 10px; font-size: 13px; font-family: inherit;
-      margin-bottom: 14px;
+      padding: 8px 10px; font-size: 13px; font-family: inherit; margin-bottom: 10px;
     }
     textarea { resize: vertical; min-height: 60px; }
-    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+    .field-label { display: block; color: #aaaacc; margin-bottom: 6px; font-size: 13px; }
+    #fileInput { display: none; }
+    .file-input-label { display: block; border: 2px dashed #334466; border-radius: 6px; padding: 20px; text-align: center; cursor: pointer; color: #6688aa; font-size: 14px; margin-bottom: 12px; }
+    .file-input-label:hover { border-color: #5577aa; color: #aaccff; }
     #uploadStatus { font-size: 13px; margin-top: 8px; min-height: 18px; }
-    .file-desc { color: #7777aa; font-size: 12px; font-style: italic; margin-top: 2px; }
+
+    /* Name picker */
+    .name-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin: 16px 0; }
+    .name-btn {
+      background: #1a1a2e; border: 2px solid #334466; border-radius: 8px;
+      color: #aaccff; padding: 12px; font-size: 14px; cursor: pointer;
+      text-align: center; transition: all 0.15s;
+    }
+    .name-btn:hover { background: #334466; border-color: #5577aa; }
+
+    /* Team management */
+    .member-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #222233; }
+    .member-row:last-child { border-bottom: none; }
+    .add-member-row { display: flex; gap: 8px; margin-top: 12px; }
+    .add-member-row input { margin-bottom: 0; flex: 1; }
   </style>
 </head>
 <body>
 <nav>
   <a class="logo" href="index.html">⚖️ TGAA Translation Hub</a>
   <a href="index.html">Файлы</a>
+  <div class="nav-right">
+    <span class="current-user" id="navUser"></span>
+    <button class="btn btn-secondary" style="font-size:12px;padding:4px 10px;" onclick="openNamePicker()">Сменить имя</button>
+    <button class="btn btn-secondary" style="font-size:12px;padding:4px 10px;" onclick="openTeamModal()">👥 Команда</button>
+  </div>
 </nav>
 
 <div class="container">
@@ -66,7 +89,6 @@
     <button class="btn btn-primary" onclick="openUpload()">＋ Загрузить файл</button>
   </div>
 
-  <!-- Overall progress -->
   <div class="card" style="margin-bottom: 28px;">
     <div class="flex-between" style="margin-bottom: 8px;">
       <span style="font-size:14px;color:#aaaadd;">Общий прогресс</span>
@@ -78,7 +100,7 @@
   </div>
 
   <div id="spinner" class="spinner">Загрузка...</div>
-  <div id="emptyState" style="display:none; text-align:center; padding:48px; color:#555577;">
+  <div id="emptyState" style="display:none;text-align:center;padding:48px;color:#555577;">
     <p style="font-size:18px;margin-bottom:12px;">Файлов пока нет</p>
     <button class="btn btn-primary" onclick="openUpload()">Загрузить первый файл</button>
   </div>
@@ -103,17 +125,41 @@
   </div>
 </div>
 
+<!-- Name picker modal -->
+<div class="modal-overlay open" id="nameModal">
+  <div class="modal">
+    <h2>👋 Кто вы?</h2>
+    <p>Выберите своё имя. Оно будет отображаться рядом со статусами, которые вы меняете.</p>
+    <div class="name-grid" id="nameGrid">
+      <div style="color:#666688;font-size:13px;">Загрузка...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Team management modal -->
+<div class="modal-overlay" id="teamModal">
+  <div class="modal">
+    <h2>👥 Команда</h2>
+    <p>Добавьте или удалите участников. Изменения видны всем сразу.</p>
+    <div id="memberList"></div>
+    <div class="add-member-row">
+      <input type="text" id="newMemberInput" placeholder="Новое имя..." onkeydown="if(event.key==='Enter')addMember()">
+      <button class="btn btn-primary" onclick="addMember()">Добавить</button>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="closeTeamModal()">Закрыть</button>
+    </div>
+  </div>
+</div>
+
 <!-- Upload modal -->
 <div class="modal-overlay" id="uploadModal">
   <div class="modal">
     <h2>⬆ Загрузить файл</h2>
-    <p>Загрузите сырой скрипт (.txt) или переведённый файл (.myformat / .json).<br>
-       Если файл с таким именем уже существует — он будет обновлён.</p>
-    <label class="file-input-label" for="fileInput">
-      <span id="fileLabel">Нажмите или перетащите файл сюда</span>
-    </label>
+    <p>Загрузите сырой скрипт (.txt) или переведённый файл (.json).<br>Если файл с таким именем уже существует — он будет обновлён.</p>
+    <label class="file-input-label" for="fileInput"><span id="fileLabel">Нажмите или перетащите файл сюда</span></label>
     <input type="file" id="fileInput" accept=".txt,.myformat,.json">
-    <label class="field-label">Описание файла (необязательно):</label>
+    <label class="field-label">Описание (необязательно):</label>
     <textarea id="fileDesc" placeholder="Например: Эпизод 1, Акт 2 — сцена в суде"></textarea>
     <div id="uploadStatus"></div>
     <div class="modal-btns">
@@ -130,33 +176,100 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
 const TAG_RE = /<[^>]+>/g
-const CHARACTER_TAGS = {
-  '<E041 1 0>':'Рюноскэ','<E041 3 2>':'Сусато','<E041 4 4>':'Айрис',
-  '<E041 2 1>':'Шерлок','<E041 17 1>':'Шерлок','<E041 78 56>':'Вагахаи',
-  '<E041 96 59>':'Виндибанк','<E041 47 31>':'МакНат','<E041 10 6>':'Джина',
-  '<E041 94 70>':'???','<E041 95 57>':'Том Летт','<E041 5 6>':'Джина',
-  '<E041 7 9>':'Грегсон','<E041 77 55>':'Бобби','<E041 14 13>':'Стронгхарт',
-  '<E041 75 24>':'Пристав','<E041 15 15>':'Судья','<E041 16 8>':'ван Зикс',
-  '<E041 6 7>':'ван Зикс','<E041 97 60>':'Нэш (высокий)','<E041 94 58>':'Грейдон',
-}
 function cleanText(s) { return s.replace(TAG_RE,' ').replace(/\s+/g,' ').trim() }
-function extractCharacter(s) {
-  for (const [t,n] of Object.entries(CHARACTER_TAGS)) if (s.includes(t)) return n
-  return null
+
+// ── Current user (sessionStorage) ──
+let currentUser = sessionStorage.getItem('tgaa_user') || null
+
+function setUser(name) {
+  currentUser = name
+  sessionStorage.setItem('tgaa_user', name)
+  document.getElementById('navUser').textContent = '👤 ' + name
+  document.getElementById('nameModal').classList.remove('open')
+  loadFiles()
 }
 
+// ── Name picker ──
+async function loadNamePicker() {
+  const { data } = await db.from('team_members').select('*').order('name')
+  const grid = document.getElementById('nameGrid')
+  grid.innerHTML = ''
+  if (!data || data.length === 0) {
+    grid.innerHTML = '<div style="color:#666688;font-size:13px;grid-column:1/-1;">Нет участников. Добавьте их через «Команда».</div>'
+    return
+  }
+  for (const m of data) {
+    const btn = document.createElement('button')
+    btn.className = 'name-btn'
+    btn.textContent = m.name
+    btn.onclick = () => setUser(m.name)
+    grid.appendChild(btn)
+  }
+}
+
+window.openNamePicker = () => {
+  loadNamePicker()
+  document.getElementById('nameModal').classList.add('open')
+}
+
+// ── Team management ──
+window.openTeamModal = async () => {
+  document.getElementById('teamModal').classList.add('open')
+  await refreshMemberList()
+}
+window.closeTeamModal = () => document.getElementById('teamModal').classList.remove('open')
+
+async function refreshMemberList() {
+  const { data } = await db.from('team_members').select('*').order('name')
+  const list = document.getElementById('memberList')
+  list.innerHTML = ''
+  if (!data || data.length === 0) {
+    list.innerHTML = '<p style="color:#666688;font-size:13px;">Пока никого нет.</p>'
+    return
+  }
+  for (const m of data) {
+    const row = document.createElement('div')
+    row.className = 'member-row'
+    row.innerHTML = `
+      <span style="color:#cccccc;">${m.name}</span>
+      <button class="btn btn-danger" style="font-size:11px;padding:3px 10px;" onclick="deleteMember(${m.id},'${m.name}')">Удалить</button>`
+    list.appendChild(row)
+  }
+}
+
+window.addMember = async () => {
+  const input = document.getElementById('newMemberInput')
+  const name = input.value.trim()
+  if (!name) return
+  await db.from('team_members').insert({ name })
+  input.value = ''
+  await refreshMemberList()
+  loadNamePicker()
+}
+
+window.deleteMember = async (id, name) => {
+  if (!confirm(`Удалить «${name}»?`)) return
+  await db.from('team_members').delete().eq('id', id)
+  await refreshMemberList()
+  loadNamePicker()
+}
+
+// ── Files ──
 async function loadFiles() {
   const { data: files } = await db.from('files').select('*').order('uploaded_at', { ascending: false })
   const { data: segs }  = await db.from('segments').select('file_id, status')
   document.getElementById('spinner').style.display = 'none'
+
   if (!files || files.length === 0) { document.getElementById('emptyState').style.display = 'block'; return }
   document.getElementById('tableWrap').style.display = 'block'
 
+  // Count statuses (strip name suffix for counting)
   const statsMap = {}
   for (const s of (segs||[])) {
+    const baseStatus = s.status.split(':')[0]
     if (!statsMap[s.file_id]) statsMap[s.file_id] = { total:0, untranslated:0, translated:0, edited:0, approved:0 }
     statsMap[s.file_id].total++
-    statsMap[s.file_id][s.status] = (statsMap[s.file_id][s.status]||0) + 1
+    statsMap[s.file_id][baseStatus] = (statsMap[s.file_id][baseStatus]||0) + 1
   }
 
   let totalAll = 0, translatedAll = 0
@@ -186,7 +299,7 @@ async function loadFiles() {
       <td class="text-muted">${f.uploaded_at.slice(0,10)}</td>
       <td>
         <div class="flex">
-          <button class="btn btn-success" style="font-size:11px;padding:4px 10px;" onclick="downloadFile(${f.id},'${f.name}')">⬇</button>
+          <button class="btn btn-success" style="font-size:11px;padding:4px 10px;" onclick="downloadFile(${f.id},'${f.name}')">⬇ .json</button>
           <button class="btn btn-danger"  style="font-size:11px;padding:4px 10px;" onclick="deleteFile(${f.id})">✕</button>
         </div>
       </td>`
@@ -198,6 +311,7 @@ async function loadFiles() {
   document.getElementById('overallText').textContent = `${translatedAll} / ${totalAll} сегментов (${pct}%)`
 }
 
+// ── Upload ──
 window.openUpload  = () => document.getElementById('uploadModal').classList.add('open')
 window.closeUpload = () => document.getElementById('uploadModal').classList.remove('open')
 document.getElementById('fileInput').addEventListener('change', e => {
@@ -226,12 +340,12 @@ window.doUpload = async () => {
   if (existing) {
     fileId = existing.id
     await db.from('segments').delete().eq('file_id', fileId)
-    await db.from('files').update({ raw_script: rawScript, uploaded_at: new Date().toISOString(), description: desc || undefined }).eq('id', fileId)
+    await db.from('files').update({ raw_script: rawScript, uploaded_at: new Date().toISOString(), description: desc||undefined }).eq('id', fileId)
   } else {
     const { data: newFile, error } = await db.from('files')
       .insert({ name: file.name, raw_script: rawScript, uploaded_at: new Date().toISOString(), description: desc })
       .select().single()
-    if (error) { setStatus('Ошибка: ' + error.message, '#ff6666'); document.getElementById('uploadBtn').disabled = false; return }
+    if (error) { setStatus('Ошибка: '+error.message,'#ff6666'); document.getElementById('uploadBtn').disabled = false; return }
     fileId = newFile.id
   }
 
@@ -241,7 +355,7 @@ window.doUpload = async () => {
   for (let i = 0; i < allSegs.length; i++) {
     if (!cleanText(allSegs[i])) continue
     const saved = savedSegments[rowIdx] || {}
-    rows.push({ file_id: fileId, seg_index: i, raw_segment: allSegs[i], translations: saved.translations || [], status: saved.status || 'untranslated' })
+    rows.push({ file_id: fileId, seg_index: i, raw_segment: allSegs[i], translations: saved.translations||[], status: saved.status||'untranslated' })
     rowIdx++
   }
   for (let i = 0; i < rows.length; i += 200)
@@ -256,13 +370,14 @@ function setStatus(msg, color) {
   el.textContent = msg; el.style.color = color
 }
 
+// ── Download ──
 window.downloadFile = async (fileId, fileName) => {
   const { data: f }    = await db.from('files').select('*').eq('id', fileId).single()
   const { data: segs } = await db.from('segments').select('*').eq('file_id', fileId).order('seg_index')
   const data = { raw_script: f.raw_script, segments: segs.map(s => ({ raw_segment: s.raw_segment, translations: s.translations, status: s.status })) }
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
   const a = document.createElement('a')
-  a.href = URL.createObjectURL(blob); a.download = fileName.replace('.txt','') + '.myformat'; a.click()
+  a.href = URL.createObjectURL(blob); a.download = fileName.replace('.txt','').replace('.myformat','') + '.json'; a.click()
 }
 
 window.deleteFile = async (fileId) => {
@@ -272,7 +387,13 @@ window.deleteFile = async (fileId) => {
   loadFiles()
 }
 
-loadFiles()
+// ── Init ──
+loadNamePicker()
+if (currentUser) {
+  document.getElementById('navUser').textContent = '👤 ' + currentUser
+  document.getElementById('nameModal').classList.remove('open')
+  loadFiles()
+}
 </script>
 </body>
 </html>

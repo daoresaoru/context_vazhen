@@ -11,6 +11,8 @@
     nav .logo { font-size: 18px; font-weight: bold; color: #aaaaff; text-decoration: none; }
     nav a { color: #888899; text-decoration: none; font-size: 14px; }
     nav a:hover { color: #ccccff; }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+    .current-user { font-size: 13px; color: #aaaaff; }
     .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
     h1 { font-size: 22px; color: #ccccff; margin-bottom: 4px; }
     .card { background: #252540; border: 1px solid #333355; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
@@ -25,71 +27,59 @@
     .flex { display: flex; align-items: center; gap: 12px; }
     .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
     .spinner { text-align: center; padding: 48px; color: #666688; }
-    .mono { font-family: 'Consolas', monospace; }
     .filter-btn { font-size: 12px; padding: 4px 12px; }
     .filter-btn.active { background: #334466; color: #aaccff; }
 
-    /* ── Segment rows ── */
-    .seg-row {
-      background: #252540; border: 1px solid #333355;
-      border-radius: 6px; margin-bottom: 6px; overflow: hidden;
-    }
-    .seg-row[data-status="translated"]  { border-color: #2a4a2a; background: #1e2e1e; }
-    .seg-row[data-status="edited"]      { border-color: #2a2a4a; background: #1e1e2e; }
-    .seg-row[data-status="approved"]    { border-color: #3a2a4a; background: #221a2e; }
+    /* Name picker modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #252540; border: 1px solid #333355; border-radius: 10px; padding: 28px; width: 440px; max-width: 95vw; }
+    .modal h2 { color: #aaaadd; margin-bottom: 8px; }
+    .modal p  { color: #8888aa; font-size: 13px; margin-bottom: 16px; }
+    .name-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin: 16px 0; }
+    .name-btn { background: #1a1a2e; border: 2px solid #334466; border-radius: 8px; color: #aaccff; padding: 12px; font-size: 14px; cursor: pointer; text-align: center; transition: all 0.15s; }
+    .name-btn:hover { background: #334466; border-color: #5577aa; }
 
-    .seg-header {
-      display: flex; align-items: center; gap: 12px;
-      padding: 10px 14px; cursor: pointer; user-select: none;
-    }
+    /* Segment rows */
+    .seg-row { background: #252540; border: 1px solid #333355; border-radius: 6px; margin-bottom: 6px; overflow: hidden; }
+    .seg-row[data-base-status="translated"] { border-color: #2a4a2a; background: #1e2e1e; }
+    .seg-row[data-base-status="edited"]     { border-color: #2a2a4a; background: #1e1e2e; }
+    .seg-row[data-base-status="approved"]   { border-color: #3a2a4a; background: #221a2e; }
+    .seg-header { display: flex; align-items: center; gap: 12px; padding: 10px 14px; cursor: pointer; user-select: none; }
     .seg-header:hover { background: rgba(255,255,255,0.03); }
     .seg-num   { color: #555577; font-size: 12px; min-width: 30px; }
     .seg-char  { color: #aaaaff; font-weight: bold; font-size: 12px; min-width: 110px; }
     .seg-preview { flex: 1; font-size: 12px; color: #aaaaaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Consolas', monospace; }
-    .seg-status-badge {
-      font-size: 11px; padding: 2px 8px; border-radius: 10px;
-      white-space: nowrap; background: #333344; color: #888899;
-    }
+    .seg-status-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; white-space: nowrap; background: #333344; color: #888899; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
     .seg-chevron { color: #555577; font-size: 12px; transition: transform 0.2s; }
 
-    /* ── Expanded editor ── */
+    /* Editor */
     .seg-editor { display: none; padding: 0 14px 14px; }
     .seg-editor.open { display: block; }
-    .editor-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
-    .col-label { font-size: 11px; color: #666688; font-style: italic; margin-bottom: 4px; }
     .chunk-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-    .orig-box {
-      background: #1a1a1a; border: 1px solid #333344; border-radius: 4px;
-      padding: 8px 10px; font-family: 'Consolas', monospace; font-size: 12px;
-      color: #bbbbbb; min-height: 50px; white-space: pre-wrap;
-    }
-    .trans-box {
-      background: #1a2a1a; border: 1px solid #445544; border-radius: 4px;
-      padding: 8px 10px; font-family: 'Consolas', monospace; font-size: 12px;
-      color: #e0e0e0; min-height: 50px; width: 100%; resize: vertical;
-      outline: none; transition: border-color 0.15s;
-    }
+    .orig-box { background: #1a1a1a; border: 1px solid #333344; border-radius: 4px; padding: 8px 10px; font-family: 'Consolas', monospace; font-size: 12px; color: #bbbbbb; min-height: 50px; white-space: pre-wrap; }
+    .trans-box { background: #1a2a1a; border: 1px solid #445544; border-radius: 4px; padding: 8px 10px; font-family: 'Consolas', monospace; font-size: 12px; color: #e0e0e0; min-height: 50px; width: 100%; resize: vertical; outline: none; transition: border-color 0.15s; }
     .trans-box:focus { border-color: #558855; }
     .trans-box.warn  { border-color: #aaaa44; background: #2a2a1a; }
     .trans-box.error { border-color: #aa4444; background: #2a1a1a; }
     .chunk-label { font-size: 10px; color: #444466; font-family: 'Consolas', monospace; margin-bottom: 2px; }
     .len-indicator { font-size: 10px; text-align: right; margin-top: 2px; }
-
-    .editor-footer { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .status-select {
-      background: #1a1a2e; color: #cccccc; border: 1px solid #444466;
-      border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer;
-    }
+    .col-headers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+    .col-header-lbl { color: #666688; font-size: 11px; font-style: italic; }
+    .editor-footer { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+    .status-select { background: #1a1a2e; color: #cccccc; border: 1px solid #444466; border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer; }
     .save-indicator { font-size: 11px; color: #555577; }
-    .save-indicator.saving  { color: #aaaa44; }
-    .save-indicator.saved   { color: #44aa44; }
-    .save-indicator.error   { color: #aa4444; }
+    .save-indicator.saving { color: #aaaa44; }
+    .save-indicator.saved  { color: #44aa44; }
+    .save-indicator.error  { color: #aa4444; }
+    .page-preview-box { background: #0a0a1a; border: 2px solid #6655aa; border-radius: 4px; padding: 8px 12px; font-family: 'Palatino Linotype', serif; font-size: 16px; color: #f0f0e0; min-height: 52px; white-space: pre; overflow: hidden; }
+    .page-preview-label { color: #8888aa; font-size: 10px; font-style: italic; margin: 8px 0 4px; border-top: 1px solid #333355; padding-top: 8px; }
 
-    /* Color tag rendering */
-    .c-red   { color: #ff6b6b; background: rgba(255,107,107,0.1); border-radius: 2px; padding: 0 1px; }
-    .c-blue  { color: #6b9fff; background: rgba(107,159,255,0.1); border-radius: 2px; padding: 0 1px; }
-    .c-green { color: #6bff8a; background: rgba(107,255,138,0.1); border-radius: 2px; padding: 0 1px; }
-    .c-yellow{ color: #ffe06b; background: rgba(255,224,107,0.1); border-radius: 2px; padding: 0 1px; }
+    /* Color tags */
+    .c-red    { color: #ff6b6b; background: rgba(255,107,107,0.1); border-radius: 2px; padding: 0 1px; }
+    .c-blue   { color: #6b9fff; background: rgba(107,159,255,0.1); border-radius: 2px; padding: 0 1px; }
+    .c-green  { color: #6bff8a; background: rgba(107,255,138,0.1); border-radius: 2px; padding: 0 1px; }
+    .c-yellow { color: #ffe06b; background: rgba(255,224,107,0.1); border-radius: 2px; padding: 0 1px; }
     .tag-badge { background:#2a2a44; color:#8888cc; font-size:9px; border-radius:2px; padding:0 3px; }
   </style>
 </head>
@@ -97,6 +87,10 @@
 <nav>
   <a class="logo" href="index.html">⚖️ TGAA Translation Hub</a>
   <a href="index.html">← Все файлы</a>
+  <div class="nav-right">
+    <span class="current-user" id="navUser"></span>
+    <button class="btn btn-secondary" style="font-size:12px;padding:4px 10px;" onclick="openNamePicker()">Сменить имя</button>
+  </div>
 </nav>
 
 <div class="container">
@@ -106,12 +100,9 @@
       <p class="text-muted" id="fileDesc"></p>
       <p class="text-muted" id="fileDate"></p>
     </div>
-    <div class="flex">
-      <button class="btn btn-success" onclick="downloadFile()">⬇ .myformat</button>
-    </div>
+    <button class="btn btn-success" onclick="downloadFile()">⬇ .json</button>
   </div>
 
-  <!-- Stats -->
   <div class="card" style="margin-bottom:16px;">
     <div class="flex-between" style="margin-bottom:6px;">
       <span style="color:#aaaadd;">Прогресс</span>
@@ -122,25 +113,33 @@
     </div>
     <div class="flex" style="gap:20px;flex-wrap:wrap;">
       <span class="text-muted">Всего: <strong id="statTotal" style="color:#ccc">—</strong></span>
-      <span style="color:#888888;">⬜ Не переведено <strong id="statUnt">—</strong></span>
-      <span style="color:#558855;">🟩 Переведено <strong id="statTr">—</strong></span>
-      <span style="color:#555588;">🟦 Отредактировано <strong id="statEd">—</strong></span>
-      <span style="color:#885588;">🟪 Одобрено <strong id="statAp">—</strong></span>
+      <span style="color:#888888;">Не пер.: <strong id="statUnt">—</strong></span>
+      <span style="color:#558855;">Перев.: <strong id="statTr">—</strong></span>
+      <span style="color:#555588;">Ред.: <strong id="statEd">—</strong></span>
+      <span style="color:#885588;">Одобр.: <strong id="statAp">—</strong></span>
     </div>
   </div>
 
-  <!-- Filter -->
   <div class="flex" style="margin-bottom:14px;flex-wrap:wrap;gap:8px;">
     <span style="color:#888899;font-size:13px;">Фильтр:</span>
     <button class="btn btn-secondary filter-btn active" data-filter="all">Все</button>
-    <button class="btn btn-secondary filter-btn" data-filter="untranslated">⬜ Не переведено</button>
-    <button class="btn btn-secondary filter-btn" data-filter="translated">🟩 Переведено</button>
-    <button class="btn btn-secondary filter-btn" data-filter="edited">🟦 Отредактировано</button>
-    <button class="btn btn-secondary filter-btn" data-filter="approved">🟪 Одобрено</button>
+    <button class="btn btn-secondary filter-btn" data-filter="untranslated">Не переведено</button>
+    <button class="btn btn-secondary filter-btn" data-filter="translated">Переведено</button>
+    <button class="btn btn-secondary filter-btn" data-filter="edited">Отредактировано</button>
+    <button class="btn btn-secondary filter-btn" data-filter="approved">Одобрено</button>
   </div>
 
   <div id="spinner" class="spinner">Загрузка сегментов...</div>
   <div id="segList"></div>
+</div>
+
+<!-- Name picker -->
+<div class="modal-overlay open" id="nameModal">
+  <div class="modal">
+    <h2>👋 Кто вы?</h2>
+    <p>Выберите своё имя. Оно будет отображаться рядом со статусами.</p>
+    <div class="name-grid" id="nameGrid"><div style="color:#666688;">Загрузка...</div></div>
+  </div>
 </div>
 
 <script type="module">
@@ -161,51 +160,99 @@ const CHARACTER_TAGS = {
   '<E041 75 24>':'Пристав','<E041 15 15>':'Судья','<E041 16 8>':'ван Зикс',
   '<E041 6 7>':'ван Зикс','<E041 97 60>':'Нэш (высокий)','<E041 94 58>':'Грейдон',
 }
-const STATUS_LABELS = { untranslated:'⬜ Не переведено', translated:'🟩 Переведено', edited:'🟦 Отредактировано', approved:'🟪 Одобрено' }
-const COLOR_TAGS = { '<E006>':'red','<E007>':'blue','<E008>':'green','<E009>':'yellow' }
+const STATUS_BASE_LABELS = {
+  untranslated: 'Не переведено',
+  translated:   'Переведено',
+  edited:       'Отредактировано',
+  approved:     'Одобрено',
+}
+const STATUS_ICONS = { untranslated:'⬜', translated:'🟩', edited:'🟦', approved:'🟪' }
+const COLOR_TAGS  = { '<E006>':'red','<E007>':'blue','<E008>':'green','<E009>':'yellow' }
 const COLOR_CLOSE = '<E005>'
-const BADGE_TAGS  = { '<E025':'spd','<E085':'wait','<E330':'shk','<E331':'shk','<E332':'shk','<E333':'shk','<E334':'shk','<E341':'anim','<E346':'anim','<E043':'sty','<E044':'sty','<E169':'lip','<E145':'exp','<E603':'sfx','<E606':'sfx','<E092':'cam' }
+const BADGE_TAGS  = { '<E025':'spd','<E085':'wait','<E330':'shk','<E333':'shk','<E334':'shk','<E341':'anim','<E169':'lip','<E145':'exp','<E603':'sfx','<E092':'cam' }
 
 function cleanText(s) { return s.replace(TAG_RE,' ').replace(/\s+/g,' ').trim() }
 function extractCharacter(s) { for (const [t,n] of Object.entries(CHARACTER_TAGS)) if (s.includes(t)) return n; return '' }
+
+// Parse "translated:Phoenix Wright" → { base: "translated", user: "Phoenix Wright" }
+function parseStatus(status) {
+  const idx = status.indexOf(':')
+  if (idx === -1) return { base: status, user: null }
+  return { base: status.slice(0, idx), user: status.slice(idx + 1) }
+}
+
+function makeStatusString(base, user) {
+  return user ? `${base}:${user}` : base
+}
+
+function statusLabel(status) {
+  const { base, user } = parseStatus(status)
+  const icon  = STATUS_ICONS[base]  || '⬜'
+  const label = STATUS_BASE_LABELS[base] || base
+  return user ? `${icon} ${label} — ${user}` : `${icon} ${label}`
+}
+
+// ── User ──
+let currentUser = sessionStorage.getItem('tgaa_user') || null
+
+function setUser(name) {
+  currentUser = name
+  sessionStorage.setItem('tgaa_user', name)
+  document.getElementById('navUser').textContent = '👤 ' + name
+  document.getElementById('nameModal').classList.remove('open')
+}
+
+async function loadNamePicker() {
+  const { data } = await db.from('team_members').select('*').order('name')
+  const grid = document.getElementById('nameGrid')
+  grid.innerHTML = ''
+  if (!data || data.length === 0) {
+    grid.innerHTML = '<div style="color:#666688;font-size:13px;grid-column:1/-1;">Нет участников. Добавьте их на главной странице.</div>'
+    return
+  }
+  for (const m of data) {
+    const btn = document.createElement('button')
+    btn.className = 'name-btn'
+    btn.textContent = m.name
+    btn.onclick = () => setUser(m.name)
+    grid.appendChild(btn)
+  }
+}
+
+window.openNamePicker = () => {
+  loadNamePicker()
+  document.getElementById('nameModal').classList.add('open')
+}
 
 // ── Chunk parsing ──
 function parseChunks(segment) {
   const parts = segment.split(/(<[^>]+>)/)
   const chunks = []
   let prefixTags = '', currentText = ''
-
   function flush(closingTag) {
     const text = currentText.trim()
     if (text) chunks.push({ prefixTags, text, pauseTag: closingTag })
     prefixTags = ''; currentText = ''
   }
-
   for (const token of parts) {
     if (!token) continue
     if (/^<[^>]+>$/.test(token)) {
       if (currentText.trim()) { flush(token); prefixTags = token }
       else prefixTags += token
-    } else {
-      currentText += token
-    }
+    } else { currentText += token }
   }
   flush('')
   return chunks
 }
 
-// ── Rich HTML for original panel ──
 function renderOrigHTML(prefixTags, text) {
-  // Determine active color from prefix
   let activeColor = null
-  for (const tag of (prefixTags.match(/<[^>]+>/g) || [])) {
+  for (const tag of (prefixTags.match(/<[^>]+>/g)||[])) {
     if (COLOR_TAGS[tag]) activeColor = COLOR_TAGS[tag]
     else if (tag === COLOR_CLOSE) activeColor = null
   }
-
   let html = activeColor ? `<span class="c-${activeColor}">` : ''
-  const tokens = text.split(/(<[^>]+>)/)
-  for (const token of tokens) {
+  for (const token of text.split(/(<[^>]+>)/)) {
     if (!token) continue
     if (/^<[^>]+>$/.test(token)) {
       if (COLOR_TAGS[token]) {
@@ -216,7 +263,7 @@ function renderOrigHTML(prefixTags, text) {
         if (activeColor) html += '</span>'
         activeColor = null
       } else {
-        for (const [pfx, lbl] of Object.entries(BADGE_TAGS))
+        for (const [pfx,lbl] of Object.entries(BADGE_TAGS))
           if (token.startsWith(pfx)) { html += `<span class="tag-badge">[${lbl}]</span>`; break }
       }
     } else {
@@ -227,25 +274,40 @@ function renderOrigHTML(prefixTags, text) {
   return html
 }
 
-// ── Line length (approximate, canvas-based) ──
+// ── Line length ──
 const _canvas = document.createElement('canvas')
 const _ctx    = _canvas.getContext('2d')
-_ctx.font     = '16px "Palatino Linotype", "Book Antiqua", Palatino, serif'
+_ctx.font     = '16px "Palatino Linotype","Book Antiqua",Palatino,serif'
 function lineWidth(text) { return _ctx.measureText(text.replace(TAG_RE,'')).width }
 function lineLengthLevel(text) {
   if (!text.trim()) return { level:'', px:0 }
   const maxPx = Math.max(...text.split('\n').map(l => lineWidth(l)))
-  if (maxPx > MAX_LINE_PX)     return { level:'error', px: Math.round(maxPx) }
+  if (maxPx > MAX_LINE_PX)      return { level:'error', px: Math.round(maxPx) }
   if (maxPx > MAX_LINE_PX - 30) return { level:'warn',  px: Math.round(maxPx) }
   return { level:'ok', px: Math.round(maxPx) }
 }
 
+function wrapToLines(text) {
+  if (!text) return ''
+  const lines = []
+  for (const para of text.split('\n')) {
+    if (!para) { lines.push(''); continue }
+    const words = para.split(' ')
+    let current = ''
+    for (const word of words) {
+      const candidate = current ? current + ' ' + word : word
+      if (lineWidth(candidate) <= MAX_LINE_PX) { current = candidate }
+      else { if (current) lines.push(current); current = word }
+    }
+    if (current) lines.push(current)
+  }
+  return lines.map((l,i) => i >= 2 ? '⛔ ' + l : l).join('\n')
+}
+
 // ── State ──
-const params  = new URLSearchParams(location.search)
-const fileId  = parseInt(params.get('id'))
-let fileData  = null
-let segments  = []
-let currentFilter = 'all'
+const params = new URLSearchParams(location.search)
+const fileId = parseInt(params.get('id'))
+let fileData = null, segments = [], currentFilter = 'all'
 const saveTimers = {}
 
 // ── Load ──
@@ -273,7 +335,10 @@ async function load() {
 
 function updateStats() {
   const c = { untranslated:0, translated:0, edited:0, approved:0 }
-  for (const s of segments) c[s.status] = (c[s.status]||0)+1
+  for (const s of segments) {
+    const base = parseStatus(s.status).base
+    c[base] = (c[base]||0) + 1
+  }
   const total = segments.length, done = total - c.untranslated
   const pct = total ? Math.round(done/total*100) : 0
   document.getElementById('progressBar').style.width = pct+'%'
@@ -285,33 +350,10 @@ function updateStats() {
   document.getElementById('statAp').textContent  = c.approved
 }
 
-// ── Render segment list ──
 function renderAll() {
   const list = document.getElementById('segList')
   list.innerHTML = ''
   segments.forEach((seg, i) => list.appendChild(makeSegRow(seg, i)))
-}
-
-function wrapToLines(text) {
-  if (!text) return ''
-  const lines = []
-  for (const paragraph of text.split('\n')) {
-    if (!paragraph) { lines.push(''); continue }
-    const words = paragraph.split(' ')
-    let current = ''
-    for (const word of words) {
-      const candidate = current ? current + ' ' + word : word
-      if (lineWidth(candidate) <= MAX_LINE_PX) {
-        current = candidate
-      } else {
-        if (current) lines.push(current)
-        current = word
-      }
-    }
-    if (current) lines.push(current)
-  }
-  // Show overflow lines with a marker
-  return lines.map((l, i) => i >= 2 ? '⛔ ' + l : l).join('\n')
 }
 
 function makeSegRow(seg, i) {
@@ -320,130 +362,123 @@ function makeSegRow(seg, i) {
   const character = extractCharacter(seg.raw_segment)
   const origPreview = cleanText(seg.raw_segment)
   const transPreview = translations.map(t => t.replace(TAG_RE,'')).filter(Boolean).join(' ')
+  const { base: baseStatus } = parseStatus(seg.status)
 
   const wrapper = document.createElement('div')
   wrapper.className = 'seg-row'
-  wrapper.dataset.status = seg.status
+  wrapper.dataset.baseStatus = baseStatus
   wrapper.dataset.id = seg.id
-  wrapper.style.display = (currentFilter === 'all' || seg.status === currentFilter) ? '' : 'none'
+  wrapper.style.display = (currentFilter === 'all' || baseStatus === currentFilter) ? '' : 'none'
 
-  // ── Header ──
+  // Header
   const header = document.createElement('div')
   header.className = 'seg-header'
   header.innerHTML = `
     <span class="seg-num">${i+1}</span>
     <span class="seg-char">${character}</span>
     <span class="seg-preview">${transPreview || origPreview}</span>
-    <span class="seg-status-badge">${STATUS_LABELS[seg.status]}</span>
+    <span class="seg-status-badge" title="${statusLabel(seg.status)}">${statusLabel(seg.status)}</span>
     <span class="seg-chevron">▶</span>`
 
-  // ── Editor ──
+  // Editor
   const editor = document.createElement('div')
   editor.className = 'seg-editor'
 
-  // Build chunk pairs
-  const chunkPairsDiv = document.createElement('div')
+  // Column headers
+  const colHdrs = document.createElement('div')
+  colHdrs.className = 'col-headers'
+  colHdrs.innerHTML = '<span class="col-header-lbl">Оригинал (EN)</span><span class="col-header-lbl">Перевод (RU)</span>'
+  editor.appendChild(colHdrs)
 
+  // Chunk pairs
+  const chunkPairsDiv = document.createElement('div')
   chunks.forEach((chunk, ci) => {
     const pair = document.createElement('div')
     pair.className = 'chunk-pair'
 
-    // Original side
     const origWrap = document.createElement('div')
-    const pauseLabel = document.createElement('div')
-    pauseLabel.className = 'chunk-label'
-    pauseLabel.textContent = chunk.pauseTag || '↵ конец'
-    const origBox = document.createElement('div')
+    const origBox  = document.createElement('div')
     origBox.className = 'orig-box'
     origBox.innerHTML = renderOrigHTML(chunk.prefixTags, chunk.text)
+    const pauseLbl = document.createElement('div')
+    pauseLbl.className = 'chunk-label'
+    pauseLbl.textContent = chunk.pauseTag || '↵ конец'
     origWrap.appendChild(origBox)
-    origWrap.appendChild(pauseLabel)
+    origWrap.appendChild(pauseLbl)
 
-    // Translation side
     const transWrap = document.createElement('div')
-    const lenDiv = document.createElement('div')
+    const lenDiv    = document.createElement('div')
     lenDiv.className = 'len-indicator'
-    const transBox = document.createElement('textarea')
+    const transBox  = document.createElement('textarea')
     transBox.className = 'trans-box'
     transBox.rows = 2
     transBox.value = translations[ci] || ''
     transBox.placeholder = 'Перевод...'
 
-    // Live length check
     function updateLen() {
       const { level, px } = lineLengthLevel(transBox.value)
-      transBox.className = 'trans-box' + (level === 'error' ? ' error' : level === 'warn' ? ' warn' : '')
+      transBox.className = 'trans-box' + (level==='error'?' error':level==='warn'?' warn':'')
       lenDiv.textContent = px ? `${px}/${MAX_LINE_PX}px` : ''
-      lenDiv.style.color = level === 'error' ? '#ff5555' : level === 'warn' ? '#aaaa44' : '#44aa44'
+      lenDiv.style.color = level==='error'?'#ff5555':level==='warn'?'#aaaa44':'#44aa44'
     }
     updateLen()
 
     transBox.addEventListener('input', () => {
       translations[ci] = transBox.value
       updateLen()
-      scheduleAutosave(seg, translations, wrapper, header)
+      scheduleAutosave(seg, translations, wrapper, header, prevBox)
     })
 
     transWrap.appendChild(transBox)
     transWrap.appendChild(lenDiv)
-
     pair.appendChild(origWrap)
     pair.appendChild(transWrap)
     chunkPairsDiv.appendChild(pair)
   })
+  editor.appendChild(chunkPairsDiv)
 
-  // Footer: status selector + save indicator
+  // Page preview
+  const prevLabel = document.createElement('div')
+  prevLabel.className = 'page-preview-label'
+  prevLabel.textContent = '📄 Страница целиком:'
+  const prevBox = document.createElement('div')
+  prevBox.className = 'page-preview-box'
+  prevBox.dataset.previewFor = seg.id
+  editor.appendChild(prevLabel)
+  editor.appendChild(prevBox)
+
+  // Footer
   const footer = document.createElement('div')
   footer.className = 'editor-footer'
   const statusSelect = document.createElement('select')
   statusSelect.className = 'status-select'
-  for (const [k,v] of Object.entries(STATUS_LABELS)) {
+  for (const [k,v] of Object.entries(STATUS_BASE_LABELS)) {
     const opt = document.createElement('option')
-    opt.value = k; opt.textContent = v
-    if (seg.status === k) opt.selected = true
+    opt.value = k; opt.textContent = `${STATUS_ICONS[k]} ${v}`
+    if (parseStatus(seg.status).base === k) opt.selected = true
     statusSelect.appendChild(opt)
   }
   statusSelect.addEventListener('change', async () => {
-    seg.status = statusSelect.value
-    wrapper.dataset.status = seg.status
-    updateStatusBadge(header, seg.status)
-    wrapper.className = 'seg-row' + (seg.status !== 'untranslated' ? ` data-status="${seg.status}"` : '')
-    wrapper.setAttribute('data-status', seg.status)
-    await db.from('segments').update({ status: seg.status }).eq('id', seg.id)
+    const newBase = statusSelect.value
+    const newStatus = makeStatusString(newBase, currentUser)
+    seg.status = newStatus
+    wrapper.dataset.baseStatus = newBase
+    header.querySelector('.seg-status-badge').textContent = statusLabel(newStatus)
+    header.querySelector('.seg-status-badge').title = statusLabel(newStatus)
+    await db.from('segments').update({ status: newStatus }).eq('id', seg.id)
     updateStats()
-    if (currentFilter !== 'all' && seg.status !== currentFilter)
+    if (currentFilter !== 'all' && newBase !== currentFilter)
       wrapper.style.display = 'none'
   })
 
   const saveInd = document.createElement('span')
   saveInd.className = 'save-indicator'
   saveInd.dataset.saveFor = seg.id
-
   footer.appendChild(statusSelect)
   footer.appendChild(saveInd)
-
-  // Column headers
-  const colHeaders = document.createElement('div')
-  colHeaders.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;'
-  colHeaders.innerHTML = `
-    <span style="color:#666688;font-size:11px;font-style:italic;">Оригинал (EN)</span>
-    <span style="color:#666688;font-size:11px;font-style:italic;">Перевод (RU)</span>`
-  editor.appendChild(colHeaders)
-  editor.appendChild(chunkPairsDiv)
-
-  // Page preview
-  const prevLabel = document.createElement('div')
-  prevLabel.style.cssText = 'color:#8888aa;font-size:10px;font-style:italic;margin:8px 0 4px;border-top:1px solid #333355;padding-top:8px;'
-  prevLabel.textContent = '📄 Страница целиком:'
-  const prevBox = document.createElement('div')
-  prevBox.style.cssText = 'background:#0a0a1a;border:2px solid #6655aa;border-radius:4px;padding:8px 12px;font-family:"Palatino Linotype",serif;font-size:16px;color:#f0f0e0;min-height:52px;white-space:pre;overflow:hidden;'
-  prevBox.dataset.previewFor = seg.id
-
-  editor.appendChild(prevLabel)
-  editor.appendChild(prevBox)
   editor.appendChild(footer)
 
-  // Toggle open/close
+  // Toggle
   let open = false
   header.addEventListener('click', () => {
     open = !open
@@ -456,31 +491,30 @@ function makeSegRow(seg, i) {
   return wrapper
 }
 
-function updateStatusBadge(header, status) {
-  header.querySelector('.seg-status-badge').textContent = STATUS_LABELS[status]
-}
-
-// ── Autosave ──
-function scheduleAutosave(seg, translations, wrapper, header) {
+function scheduleAutosave(seg, translations, wrapper, header, prevBox) {
   const ind = document.querySelector(`[data-save-for="${seg.id}"]`)
   if (ind) { ind.className = 'save-indicator saving'; ind.textContent = 'Сохранение...' }
   clearTimeout(saveTimers[seg.id])
   saveTimers[seg.id] = setTimeout(async () => {
-    // Auto-promote to translated
     const hasTranslation = translations.some(t => t.trim())
-    if (hasTranslation && seg.status === 'untranslated') {
-      seg.status = 'translated'
-      wrapper.setAttribute('data-status', 'translated')
-      // Update status badge and select
-      updateStatusBadge(header, 'translated')
+    const { base: currentBase } = parseStatus(seg.status)
+
+    if (hasTranslation && currentBase === 'untranslated') {
+      const newStatus = makeStatusString('translated', currentUser)
+      seg.status = newStatus
+      wrapper.dataset.baseStatus = 'translated'
+      header.querySelector('.seg-status-badge').textContent = statusLabel(newStatus)
+      header.querySelector('.seg-status-badge').title = statusLabel(newStatus)
       const sel = wrapper.querySelector('.status-select')
       if (sel) sel.value = 'translated'
     }
-    // Update translation preview in header
+
+    // Update header preview
     const preview = translations.map(t => t.replace(TAG_RE,'')).filter(Boolean).join(' ')
     const previewEl = header.querySelector('.seg-preview')
     if (previewEl) previewEl.textContent = preview || cleanText(seg.raw_segment)
-    const prevBox = document.querySelector(`[data-preview-for="${seg.id}"]`)
+
+    // Update page preview box
     if (prevBox) prevBox.textContent = wrapToLines(preview)
 
     const { error } = await db.from('segments')
@@ -488,37 +522,44 @@ function scheduleAutosave(seg, translations, wrapper, header) {
       .eq('id', seg.id)
 
     if (ind) {
-      if (error) { ind.className = 'save-indicator error'; ind.textContent = 'Ошибка сохранения' }
-      else       { ind.className = 'save-indicator saved'; ind.textContent = '✓ Сохранено' }
-      setTimeout(() => { if (ind) { ind.textContent = ''; ind.className = 'save-indicator' } }, 2000)
+      ind.className = error ? 'save-indicator error' : 'save-indicator saved'
+      ind.textContent = error ? 'Ошибка сохранения' : '✓ Сохранено'
+      setTimeout(() => { if (ind) { ind.textContent=''; ind.className='save-indicator' } }, 2000)
     }
     seg.translations = [...translations]
     updateStats()
-    
   }, 1000)
 }
 
-// ── Filter ──
+// Filter
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
     btn.classList.add('active')
     currentFilter = btn.dataset.filter
     document.querySelectorAll('.seg-row').forEach(row => {
-      row.style.display = (currentFilter === 'all' || row.dataset.status === currentFilter) ? '' : 'none'
+      row.style.display = (currentFilter==='all' || row.dataset.baseStatus===currentFilter) ? '' : 'none'
     })
   })
 })
 
-// ── Download ──
+// Download
 window.downloadFile = async () => {
   const { data: segs } = await db.from('segments').select('*').eq('file_id', fileId).order('seg_index')
   const data = { raw_script: fileData.raw_script, segments: segs.map(s => ({ raw_segment: s.raw_segment, translations: s.translations, status: s.status })) }
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob)
-  a.download = fileData.name.replace('.txt','') + '.json'; a.click()
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = fileData.name.replace('.txt','').replace('.myformat','') + '.json'
+  a.click()
 }
 
+// Init
+loadNamePicker()
+if (currentUser) {
+  document.getElementById('navUser').textContent = '👤 ' + currentUser
+  document.getElementById('nameModal').classList.remove('open')
+}
 load()
 </script>
 </body>
