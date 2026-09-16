@@ -438,14 +438,99 @@ function makeSegRow(seg, i) {
   editor.appendChild(chunkPairsDiv)
 
   // Page preview
+  const prevHeader = document.createElement('div')
+  prevHeader.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px;border-top:1px solid #333355;padding-top:8px;'
   const prevLabel = document.createElement('div')
   prevLabel.className = 'page-preview-label'
+  prevLabel.style.margin = '0'
   prevLabel.textContent = '📄 Страница целиком:'
+  const playBtn = document.createElement('button')
+  playBtn.className = 'btn btn-secondary'
+  playBtn.style.cssText = 'font-size:11px;padding:3px 10px;background:#334433;color:#aaffaa;'
+  playBtn.textContent = '▶ Воспроизвести'
+  prevHeader.appendChild(prevLabel)
+  prevHeader.appendChild(playBtn)
   const prevBox = document.createElement('div')
   prevBox.className = 'page-preview-box'
   prevBox.dataset.previewFor = seg.id
-  editor.appendChild(prevLabel)
+  editor.appendChild(prevHeader)
   editor.appendChild(prevBox)
+
+  // Animation state
+  let animTimer = null
+  let animating = false
+
+  playBtn.addEventListener('click', () => {
+    if (animating) {
+      // Stop
+      clearTimeout(animTimer)
+      animating = false
+      playBtn.textContent = '▶ Воспроизвести'
+      playBtn.style.background = '#334433'
+      playBtn.style.color = '#aaffaa'
+      const preview = translations.map(t => t.replace(TAG_RE,'')).filter(Boolean).join(' ')
+      prevBox.textContent = wrapToLines(preview)
+    } else {
+      // Build schedule from chunks + translations
+      const schedule = chunks.map((chunk, ci) => {
+        const text = (translations[ci] || '').replace(TAG_RE, '')
+        // Pause from <E003 X> in pauseTag
+        let pauseMs = 0
+        const e003 = chunk.pauseTag.match(/<E003\s+(\d+)>/)
+        if (e003) pauseMs = Math.round(parseInt(e003[1]) / 30 * 1000)
+        // Speed from <E025 X> in prefixTags
+        let intervalMs = 100
+        const e025 = chunk.prefixTags.match(/<E025\s+(\d+)>/)
+        if (e025) intervalMs = Math.round(parseInt(e025[1]) / 30 * 1000)
+        return { text, pauseMs, intervalMs }
+      }).filter(s => s.text)
+
+      if (!schedule.length) return
+
+      animating = true
+      playBtn.textContent = '⏹ Стоп'
+      playBtn.style.background = '#443333'
+      playBtn.style.color = '#ffaaaa'
+      prevBox.textContent = ''
+
+      let chunkIdx = 0
+      let charPos  = 0
+      let displayed = ''
+
+      function tick() {
+        if (!animating) return
+        if (chunkIdx >= schedule.length) {
+          // Done
+          animating = false
+          playBtn.textContent = '▶ Воспроизвести'
+          playBtn.style.background = '#334433'
+          playBtn.style.color = '#aaffaa'
+          return
+        }
+        const { text, pauseMs, intervalMs } = schedule[chunkIdx]
+        charPos++
+        prevBox.textContent = wrapToLines(displayed + text.slice(0, charPos))
+
+        if (charPos >= text.length) {
+          // Chunk done
+          displayed += text
+          chunkIdx++
+          charPos = 0
+          if (pauseMs > 0) {
+            animTimer = setTimeout(tick, pauseMs)
+          } else {
+            const next = schedule[chunkIdx]
+            animTimer = setTimeout(tick, next ? next.intervalMs : 100)
+          }
+        } else {
+          animTimer = setTimeout(tick, intervalMs)
+        }
+      }
+
+      const firstInterval = schedule[0]?.intervalMs || 100
+      animTimer = setTimeout(tick, firstInterval)
+    }
+  })
 
   // Footer
   const footer = document.createElement('div')
