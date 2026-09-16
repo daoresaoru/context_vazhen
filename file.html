@@ -267,7 +267,8 @@ function renderOrigHTML(prefixTags, text) {
           if (token.startsWith(pfx)) { html += `<span class="tag-badge">[${lbl}]</span>`; break }
       }
     } else {
-      html += token.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')
+      const escaped = token.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')
+      html += activeColor ? `<span class="c-${activeColor}">${escaped}</span>` : escaped
     }
   }
   if (activeColor) html += '</span>'
