@@ -159,10 +159,7 @@ const CHARACTER_TAGS = {
   '<E041 7 9>':'Грегсон','<E041 77 55>':'Бобби','<E041 14 13>':'Стронгхарт',
   '<E041 75 24>':'Пристав','<E041 15 15>':'Судья','<E041 16 8>':'ван Зикс',
   '<E041 6 7>':'ван Зикс','<E041 97 60>':'Нэш (высокий)','<E041 94 58>':'Грейдон',
-  '<E041 8 4>':'Рютаро', '<E041 24 15>':'Судья', '<E041 25 16>':'Аучи', 
-  '<E041 13 11>':  'Микотоба', '<E041 41 65>':'Рей', '<E041 28 64>':'Менимемо', 
-  '<E041 27 19>':'Хосонага',  '<E041 29 32>':'Сосэки', '<E041 30 15>':'Сеиширо',
-  '<E041 8 2>':'Сусато',
+  '<E041 8 4>':'Рютаро',
 }
 const STATUS_BASE_LABELS = {
   untranslated: 'Не переведено',
@@ -473,7 +470,7 @@ function makeSegRow(seg, i) {
       playBtn.textContent = '▶ Воспроизвести'
       playBtn.style.background = '#334433'
       playBtn.style.color = '#aaffaa'
-      const preview = translations.map(t => t.replace(TAG_RE,'')).filter(Boolean).join(' ')
+      const preview = translations.map(t => t.replace(TAG_RE,'')).join('')
       prevBox.textContent = wrapToLines(preview)
     } else {
       // Build schedule from chunks + translations
@@ -600,7 +597,7 @@ function scheduleAutosave(seg, translations, wrapper, header, prevBox) {
     }
 
     // Update header preview
-    const preview = translations.map(t => t.replace(TAG_RE,'')).filter(Boolean).join(' ')
+    const preview = translations.map(t => t.replace(TAG_RE,'')).join('')
     const previewEl = header.querySelector('.seg-preview')
     if (previewEl) previewEl.textContent = preview || cleanText(seg.raw_segment)
 
