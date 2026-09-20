@@ -37,15 +37,11 @@
     /* Modals */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; }
     .modal-overlay.open { display: flex; }
-    .modal { background: #252540; border: 1px solid #333355; border-radius: 10px; padding: 28px; width: 480px; max-width: 95vw; }
+    .modal { background: #252540; border: 1px solid #333355; border-radius: 10px; padding: 28px; width: 500px; max-width: 95vw; }
     .modal h2 { color: #aaaadd; margin-bottom: 8px; }
     .modal p  { color: #8888aa; font-size: 13px; margin-bottom: 16px; }
     .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
-    input[type=text], textarea {
-      width: 100%; background: #1a1a2e; color: #cccccc;
-      border: 1px solid #444466; border-radius: 5px;
-      padding: 8px 10px; font-size: 13px; font-family: inherit; margin-bottom: 10px;
-    }
+    input[type=text], textarea { width: 100%; background: #1a1a2e; color: #cccccc; border: 1px solid #444466; border-radius: 5px; padding: 8px 10px; font-size: 13px; font-family: inherit; margin-bottom: 10px; }
     textarea { resize: vertical; min-height: 60px; }
     .field-label { display: block; color: #aaaacc; margin-bottom: 6px; font-size: 13px; }
     #fileInput { display: none; }
@@ -55,11 +51,7 @@
 
     /* Name picker */
     .name-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin: 16px 0; }
-    .name-btn {
-      background: #1a1a2e; border: 2px solid #334466; border-radius: 8px;
-      color: #aaccff; padding: 12px; font-size: 14px; cursor: pointer;
-      text-align: center; transition: all 0.15s;
-    }
+    .name-btn { background: #1a1a2e; border: 2px solid #334466; border-radius: 8px; color: #aaccff; padding: 12px; font-size: 14px; cursor: pointer; text-align: center; transition: all 0.15s; }
     .name-btn:hover { background: #334466; border-color: #5577aa; }
 
     /* Team management */
@@ -113,7 +105,7 @@
             <th>Прогресс</th>
             <th style="width:70px;">Всего</th>
             <th style="width:100px;">Переведено</th>
-            <th style="width:115px;">Отредактировано</th>
+            <th style="width:110px;">Отредактировано</th>
             <th style="width:80px;">Одобрено</th>
             <th style="width:100px;">Загружен</th>
             <th style="width:130px;"></th>
@@ -130,7 +122,7 @@
   <div class="modal">
     <h2>👋 Кто вы?</h2>
     <p>Выберите своё имя. Оно будет отображаться рядом со статусами, которые вы меняете.</p>
-        <div class="name-grid" id="nameGrid"><div style="color:#666688;font-size:13px;">Загрузка...</div></div>
+    <div class="name-grid" id="nameGrid"><div style="color:#666688;font-size:13px;">Загрузка...</div></div>
     <div style="margin-top:12px;text-align:center;">
       <button class="btn btn-secondary" onclick="openTeamModal()">👥 Добавить участников</button>
     </div>
@@ -141,7 +133,7 @@
 <div class="modal-overlay" id="teamModal">
   <div class="modal">
     <h2>👥 Команда</h2>
-    <p>Добавьте или удалите участников. Изменения видны всем сразу.</p>
+    <p>Добавляйте или удаляйте участников. Изменения видны всем сразу.</p>
     <div id="memberList"></div>
     <div class="add-member-row">
       <input type="text" id="newMemberInput" placeholder="Новое имя..." onkeydown="if(event.key==='Enter')addMember()">
@@ -178,8 +170,8 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
 const TAG_RE = /<[^>]+>/g
 function cleanText(s) { return s.replace(TAG_RE,' ').replace(/\s+/g,' ').trim() }
+function parseStatusBase(s) { return (s||'untranslated').split(':')[0] }
 
-// ── Current user (sessionStorage) ──
 let currentUser = sessionStorage.getItem('tgaa_user') || null
 
 function setUser(name) {
@@ -190,13 +182,12 @@ function setUser(name) {
   loadFiles()
 }
 
-// ── Name picker ──
 async function loadNamePicker() {
   const { data } = await db.from('team_members').select('*').order('name')
   const grid = document.getElementById('nameGrid')
   grid.innerHTML = ''
   if (!data || data.length === 0) {
-    grid.innerHTML = '<div style="color:#666688;font-size:13px;grid-column:1/-1;">Нет участников. Добавьте их через «Команда».</div>'
+    grid.innerHTML = '<div style="color:#666688;font-size:13px;grid-column:1/-1;">Нет участников. Нажмите «Добавить участников» ниже.</div>'
     return
   }
   for (const m of data) {
@@ -208,18 +199,11 @@ async function loadNamePicker() {
   }
 }
 
-window.openNamePicker = () => {
-  loadNamePicker()
-  document.getElementById('nameModal').classList.add('open')
-}
+window.openNamePicker = () => { loadNamePicker(); document.getElementById('nameModal').classList.add('open') }
 
-// ── Team management ──
 window.openTeamModal = async () => {
   const pwd = prompt('Введите пароль администратора:')
-  if (pwd !== 'Лестрейд') {
-    alert('Неверный пароль.')
-    return
-  }
+  if (pwd !== 'tgaa_admin') { alert('Неверный пароль.'); return }
   document.getElementById('teamModal').classList.add('open')
   await refreshMemberList()
 }
@@ -230,14 +214,13 @@ async function refreshMemberList() {
   const list = document.getElementById('memberList')
   list.innerHTML = ''
   if (!data || data.length === 0) {
-    list.innerHTML = '<p style="color:#666688;font-size:13px;">Пока никого нет.</p>'
+    list.innerHTML = '<p style="color:#666688;font-size:13px;margin-bottom:8px;">Пока никого нет.</p>'
     return
   }
   for (const m of data) {
     const row = document.createElement('div')
     row.className = 'member-row'
-    row.innerHTML = `
-      <span style="color:#cccccc;">${m.name}</span>
+    row.innerHTML = `<span style="color:#cccccc;">${m.name}</span>
       <button class="btn btn-danger" style="font-size:11px;padding:3px 10px;" onclick="deleteMember(${m.id},'${m.name}')">Удалить</button>`
     list.appendChild(row)
   }
@@ -260,7 +243,6 @@ window.deleteMember = async (id, name) => {
   loadNamePicker()
 }
 
-// ── Files ──
 async function loadFiles() {
   const { data: files } = await db.from('files').select('*').order('uploaded_at', { ascending: false })
   const { data: segs }  = await db.from('segments').select('file_id, status')
@@ -269,13 +251,12 @@ async function loadFiles() {
   if (!files || files.length === 0) { document.getElementById('emptyState').style.display = 'block'; return }
   document.getElementById('tableWrap').style.display = 'block'
 
-  // Count statuses (strip name suffix for counting)
   const statsMap = {}
   for (const s of (segs||[])) {
-    const baseStatus = s.status.split(':')[0]
-    if (!statsMap[s.file_id]) statsMap[s.file_id] = { total:0, untranslated:0, translated:0, edited:0, approved:0 }
+    const base = parseStatusBase(s.status)
+    if (!statsMap[s.file_id]) statsMap[s.file_id] = { total:0, untranslated:0, translated:0, redacted:0, approved:0 }
     statsMap[s.file_id].total++
-    statsMap[s.file_id][baseStatus] = (statsMap[s.file_id][baseStatus]||0) + 1
+    statsMap[s.file_id][base] = (statsMap[s.file_id][base]||0) + 1
   }
 
   let totalAll = 0, translatedAll = 0
@@ -283,7 +264,7 @@ async function loadFiles() {
   tbody.innerHTML = ''
 
   for (const f of files) {
-    const s = statsMap[f.id] || { total:0, untranslated:0, translated:0, edited:0, approved:0 }
+    const s = statsMap[f.id] || { total:0, untranslated:0, translated:0, redacted:0, approved:0 }
     const done = s.total - (s.untranslated||0)
     const pct  = s.total ? Math.round(done/s.total*100) : 0
     totalAll += s.total; translatedAll += done
@@ -300,8 +281,8 @@ async function loadFiles() {
       </td>
       <td>${s.total}</td>
       <td style="color:#558855;">${s.translated||0}</td>
-      <td style="color:#555588;">${s.edited||0}</td>
-      <td style="color:#885588;">${s.approved||0}</td>
+      <td style="color:#aa7733;">${s.redacted||0}</td>
+      <td style="color:#9966cc;">${s.approved||0}</td>
       <td class="text-muted">${f.uploaded_at.slice(0,10)}</td>
       <td>
         <div class="flex">
@@ -317,7 +298,6 @@ async function loadFiles() {
   document.getElementById('overallText').textContent = `${translatedAll} / ${totalAll} сегментов (${pct}%)`
 }
 
-// ── Upload ──
 window.openUpload  = () => document.getElementById('uploadModal').classList.add('open')
 window.closeUpload = () => document.getElementById('uploadModal').classList.remove('open')
 document.getElementById('fileInput').addEventListener('change', e => {
@@ -326,9 +306,9 @@ document.getElementById('fileInput').addEventListener('change', e => {
 
 window.doUpload = async () => {
   const file = document.getElementById('fileInput').files[0]
-  if (!file) { setStatus('Выберите файл','#ff6666'); return }
+  if (!file) { setUploadStatus('Выберите файл','#ff6666'); return }
   const desc = document.getElementById('fileDesc').value.trim()
-  setStatus('Обработка...','#aaaaff')
+  setUploadStatus('Обработка...','#aaaaff')
   document.getElementById('uploadBtn').disabled = true
 
   const text = await file.text()
@@ -339,7 +319,7 @@ window.doUpload = async () => {
     savedSegments = data.segments || []
   } else { rawScript = text }
 
-  if (!rawScript.trim()) { setStatus('Пустой файл','#ff6666'); document.getElementById('uploadBtn').disabled = false; return }
+  if (!rawScript.trim()) { setUploadStatus('Пустой файл','#ff6666'); document.getElementById('uploadBtn').disabled=false; return }
 
   const { data: existing } = await db.from('files').select('id').eq('name', file.name).maybeSingle()
   let fileId
@@ -351,7 +331,7 @@ window.doUpload = async () => {
     const { data: newFile, error } = await db.from('files')
       .insert({ name: file.name, raw_script: rawScript, uploaded_at: new Date().toISOString(), description: desc })
       .select().single()
-    if (error) { setStatus('Ошибка: '+error.message,'#ff6666'); document.getElementById('uploadBtn').disabled = false; return }
+    if (error) { setUploadStatus('Ошибка: '+error.message,'#ff6666'); document.getElementById('uploadBtn').disabled=false; return }
     fileId = newFile.id
   }
 
@@ -367,23 +347,22 @@ window.doUpload = async () => {
   for (let i = 0; i < rows.length; i += 200)
     await db.from('segments').insert(rows.slice(i, i+200))
 
-  setStatus('Готово! ✓','#aaffaa')
-  setTimeout(() => { closeUpload(); loadFiles(); document.getElementById('uploadBtn').disabled = false }, 800)
+  setUploadStatus('Готово! ✓','#aaffaa')
+  setTimeout(() => { closeUpload(); loadFiles(); document.getElementById('uploadBtn').disabled=false }, 800)
 }
 
-function setStatus(msg, color) {
+function setUploadStatus(msg, color) {
   const el = document.getElementById('uploadStatus')
   el.textContent = msg; el.style.color = color
 }
 
-// ── Download ──
 window.downloadFile = async (fileId, fileName) => {
   const { data: f }    = await db.from('files').select('*').eq('id', fileId).single()
   const { data: segs } = await db.from('segments').select('*').eq('file_id', fileId).order('seg_index')
-  const data = { raw_script: f.raw_script, segments: segs.map(s => ({ raw_segment: s.raw_segment, translations: s.translations, status: s.status })) }
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const data = { raw_script: f.raw_script, segments: segs.map(s=>({ raw_segment:s.raw_segment, translations:s.translations, status:s.status })) }
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'})
   const a = document.createElement('a')
-  a.href = URL.createObjectURL(blob); a.download = fileName.replace('.txt','').replace('.myformat','') + '.json'; a.click()
+  a.href=URL.createObjectURL(blob); a.download=fileName.replace('.txt','').replace('.myformat','')+'.json'; a.click()
 }
 
 window.deleteFile = async (fileId) => {
@@ -393,7 +372,6 @@ window.deleteFile = async (fileId) => {
   loadFiles()
 }
 
-// ── Init ──
 loadNamePicker()
 if (currentUser) {
   document.getElementById('navUser').textContent = '👤 ' + currentUser

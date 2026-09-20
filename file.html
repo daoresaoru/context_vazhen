@@ -20,6 +20,7 @@
     .btn-primary   { background: #334466; color: #aaccff; }
     .btn-success   { background: #224422; color: #aaffaa; }
     .btn-secondary { background: #333344; color: #aaaacc; }
+    .btn-approve   { background: #3a2a4a; color: #cc99ff; border: 1px solid #6644aa; }
     .btn:hover { filter: brightness(1.2); }
     .progress-bar-outer { background: #1a1a2e; border-radius: 6px; height: 10px; overflow: hidden; margin: 6px 0; }
     .progress-bar-inner { height: 100%; background: #558855; border-radius: 6px; }
@@ -41,17 +42,32 @@
     .name-btn:hover { background: #334466; border-color: #5577aa; }
 
     /* Segment rows */
-    .seg-row { background: #252540; border: 1px solid #333355; border-radius: 6px; margin-bottom: 6px; overflow: hidden; }
-    .seg-row[data-base-status="translated"] { border-color: #2a4a2a; background: #1e2e1e; }
-    .seg-row[data-base-status="edited"]     { border-color: #2a2a4a; background: #1e1e2e; }
-    .seg-row[data-base-status="approved"]   { border-color: #3a2a4a; background: #221a2e; }
+    .seg-row { background: #252540; border: 1px solid #333355; border-radius: 6px; margin-bottom: 6px; overflow: hidden; transition: background 0.2s, border-color 0.2s; }
+    .seg-row[data-base="translated"] { border-color: #2a4a2a; background: #1e2e1e; }
+    .seg-row[data-base="redacted"]   { border-color: #4a3a2a; background: #2e2a1e; }
+    .seg-row[data-base="approved"]   { border-color: #3a2a4a; background: #221a2e; }
     .seg-header { display: flex; align-items: center; gap: 12px; padding: 10px 14px; cursor: pointer; user-select: none; }
     .seg-header:hover { background: rgba(255,255,255,0.03); }
-    .seg-num   { color: #555577; font-size: 12px; min-width: 30px; }
-    .seg-char  { color: #aaaaff; font-weight: bold; font-size: 12px; min-width: 110px; }
+    .seg-num     { color: #555577; font-size: 12px; min-width: 30px; }
+    .seg-char    { color: #aaaaff; font-weight: bold; font-size: 12px; min-width: 110px; }
     .seg-preview { flex: 1; font-size: 12px; color: #aaaaaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Consolas', monospace; }
-    .seg-status-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; white-space: nowrap; background: #333344; color: #888899; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
-    .seg-chevron { color: #555577; font-size: 12px; transition: transform 0.2s; }
+    .seg-chevron { color: #555577; font-size: 12px; }
+
+    /* Status badge with tooltip */
+    .status-badge-wrap { position: relative; }
+    .seg-status-badge {
+      font-size: 11px; padding: 3px 10px; border-radius: 10px;
+      white-space: nowrap; background: #333344; color: #888899;
+      cursor: default; max-width: 230px; overflow: hidden; text-overflow: ellipsis;
+      display: inline-block;
+    }
+    .status-badge-wrap .tooltip {
+      display: none; position: absolute; right: 0; top: calc(100% + 6px);
+      background: #1a1a2e; border: 1px solid #444466; border-radius: 6px;
+      padding: 8px 12px; font-size: 12px; color: #cccccc; white-space: nowrap;
+      z-index: 50; min-width: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    .status-badge-wrap:hover .tooltip { display: block; }
 
     /* Editor */
     .seg-editor { display: none; padding: 0 14px 14px; }
@@ -67,13 +83,12 @@
     .col-headers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
     .col-header-lbl { color: #666688; font-size: 11px; font-style: italic; }
     .editor-footer { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
-    .status-select { background: #1a1a2e; color: #cccccc; border: 1px solid #444466; border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer; }
     .save-indicator { font-size: 11px; color: #555577; }
     .save-indicator.saving { color: #aaaa44; }
     .save-indicator.saved  { color: #44aa44; }
     .save-indicator.error  { color: #aa4444; }
     .page-preview-box { background: #0a0a1a; border: 2px solid #6655aa; border-radius: 4px; padding: 8px 12px; font-family: 'Palatino Linotype', serif; font-size: 16px; color: #f0f0e0; min-height: 52px; white-space: pre; overflow: hidden; }
-    .page-preview-label { color: #8888aa; font-size: 10px; font-style: italic; margin: 8px 0 4px; border-top: 1px solid #333355; padding-top: 8px; }
+    .page-preview-label { display: flex; align-items: center; justify-content: space-between; color: #8888aa; font-size: 10px; font-style: italic; margin: 8px 0 4px; border-top: 1px solid #333355; padding-top: 8px; }
 
     /* Color tags */
     .c-red    { color: #ff6b6b; background: rgba(255,107,107,0.1); border-radius: 2px; padding: 0 1px; }
@@ -115,8 +130,8 @@
       <span class="text-muted">Всего: <strong id="statTotal" style="color:#ccc">—</strong></span>
       <span style="color:#888888;">Не пер.: <strong id="statUnt">—</strong></span>
       <span style="color:#558855;">Перев.: <strong id="statTr">—</strong></span>
-      <span style="color:#555588;">Ред.: <strong id="statEd">—</strong></span>
-      <span style="color:#885588;">Одобр.: <strong id="statAp">—</strong></span>
+      <span style="color:#aa7733;">Ред.: <strong id="statRed">—</strong></span>
+      <span style="color:#9966cc;">Одобр.: <strong id="statAp">—</strong></span>
     </div>
   </div>
 
@@ -125,7 +140,7 @@
     <button class="btn btn-secondary filter-btn active" data-filter="all">Все</button>
     <button class="btn btn-secondary filter-btn" data-filter="untranslated">Не переведено</button>
     <button class="btn btn-secondary filter-btn" data-filter="translated">Переведено</button>
-    <button class="btn btn-secondary filter-btn" data-filter="edited">Отредактировано</button>
+    <button class="btn btn-secondary filter-btn" data-filter="redacted">Отредактировано</button>
     <button class="btn btn-secondary filter-btn" data-filter="approved">Одобрено</button>
   </div>
 
@@ -148,7 +163,6 @@ const SUPABASE_URL = 'https://miyytqwqfjrtkbwqyiuy.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1peXl0cXdxZmpydGtid3F5aXV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5NTcxNzAsImV4cCI6MjEwMzUzMzE3MH0.zhCMyP5wDrt_5mTM8qYNyj0GyOVqPbEOvXd7Hckym6o'
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-// ── Constants ──
 const MAX_LINE_PX = 355
 const TAG_RE = /<[^>]+>/g
 const CHARACTER_TAGS = {
@@ -159,39 +173,51 @@ const CHARACTER_TAGS = {
   '<E041 7 9>':'Грегсон','<E041 77 55>':'Бобби','<E041 14 13>':'Стронгхарт',
   '<E041 75 24>':'Пристав','<E041 15 15>':'Судья','<E041 16 8>':'ван Зикс',
   '<E041 6 7>':'ван Зикс','<E041 97 60>':'Нэш (высокий)','<E041 94 58>':'Грейдон',
-  '<E041 8 4>':'Рютаро',
 }
-const STATUS_BASE_LABELS = {
-  untranslated: 'Не переведено',
-  translated:   'Переведено',
-  edited:       'Отредактировано',
-  approved:     'Одобрено',
-}
-const STATUS_ICONS = { untranslated:'⬜', translated:'🟩', edited:'🟦', approved:'🟪' }
 const COLOR_TAGS  = { '<E006>':'red','<E007>':'blue','<E008>':'green','<E009>':'yellow' }
 const COLOR_CLOSE = '<E005>'
 const BADGE_TAGS  = { '<E025':'spd','<E085':'wait','<E330':'shk','<E333':'shk','<E334':'shk','<E341':'anim','<E169':'lip','<E145':'exp','<E603':'sfx','<E092':'cam' }
 
+// ── Status helpers ──
+// Format: "base:name" or "approved:name:timestamp"
+function parseStatus(s) {
+  if (!s) return { base:'untranslated', name:null, ts:null }
+  const parts = s.split(':')
+  return { base: parts[0], name: parts[1]||null, ts: parts[2]||null }
+}
+
+function makeStatus(base, name, ts=null) {
+  if (base === 'untranslated') return 'untranslated'
+  if (base === 'approved') return `approved:${name}:${ts || new Date().toISOString()}`
+  return `${base}:${name}`
+}
+
+function statusLabel(s) {
+  const { base, name } = parseStatus(s)
+  const icons = { untranslated:'⬜', translated:'🟩', redacted:'🟧', approved:'🟪' }
+  const labels = { untranslated:'Не переведено', translated:'Переведено', redacted:'Отредактировано', approved:'Одобрено' }
+  const icon  = icons[base]  || '⬜'
+  const label = labels[base] || base
+  return name ? `${icon} ${label} — ${name}` : `${icon} ${label}`
+}
+
+function tooltipContent(s) {
+  const { base, name, ts } = parseStatus(s)
+  if (base === 'untranslated') return null
+  if (base === 'approved' && name && ts) {
+    const date = new Date(ts).toLocaleString('ru-RU')
+    return `✓ Одобрено: ${name}\n🕐 ${date}`
+  }
+  if (name) return `Последнее изменение: ${name}`
+  return null
+}
+
+function statusBadgeColor(base) {
+  return { untranslated:'#333344', translated:'#1a3a1a', redacted:'#3a2a1a', approved:'#2a1a3a' }[base] || '#333344'
+}
+
 function cleanText(s) { return s.replace(TAG_RE,' ').replace(/\s+/g,' ').trim() }
 function extractCharacter(s) { for (const [t,n] of Object.entries(CHARACTER_TAGS)) if (s.includes(t)) return n; return '' }
-
-// Parse "translated:Phoenix Wright" → { base: "translated", user: "Phoenix Wright" }
-function parseStatus(status) {
-  const idx = status.indexOf(':')
-  if (idx === -1) return { base: status, user: null }
-  return { base: status.slice(0, idx), user: status.slice(idx + 1) }
-}
-
-function makeStatusString(base, user) {
-  return user ? `${base}:${user}` : base
-}
-
-function statusLabel(status) {
-  const { base, user } = parseStatus(status)
-  const icon  = STATUS_ICONS[base]  || '⬜'
-  const label = STATUS_BASE_LABELS[base] || base
-  return user ? `${icon} ${label} — ${user}` : `${icon} ${label}`
-}
 
 // ── User ──
 let currentUser = sessionStorage.getItem('tgaa_user') || null
@@ -219,11 +245,7 @@ async function loadNamePicker() {
     grid.appendChild(btn)
   }
 }
-
-window.openNamePicker = () => {
-  loadNamePicker()
-  document.getElementById('nameModal').classList.add('open')
-}
+window.openNamePicker = () => { loadNamePicker(); document.getElementById('nameModal').classList.add('open') }
 
 // ── Chunk parsing ──
 function parseChunks(segment) {
@@ -312,7 +334,6 @@ const fileId = parseInt(params.get('id'))
 let fileData = null, segments = [], currentFilter = 'all'
 const saveTimers = {}
 
-// ── Load ──
 async function load() {
   const { data: f } = await db.from('files').select('*').eq('id', fileId).single()
   fileData = f
@@ -336,7 +357,7 @@ async function load() {
 }
 
 function updateStats() {
-  const c = { untranslated:0, translated:0, edited:0, approved:0 }
+  const c = { untranslated:0, translated:0, redacted:0, approved:0 }
   for (const s of segments) {
     const base = parseStatus(s.status).base
     c[base] = (c[base]||0) + 1
@@ -348,7 +369,7 @@ function updateStats() {
   document.getElementById('statTotal').textContent = total
   document.getElementById('statUnt').textContent = c.untranslated
   document.getElementById('statTr').textContent  = c.translated
-  document.getElementById('statEd').textContent  = c.edited
+  document.getElementById('statRed').textContent = c.redacted
   document.getElementById('statAp').textContent  = c.approved
 }
 
@@ -358,46 +379,63 @@ function renderAll() {
   segments.forEach((seg, i) => list.appendChild(makeSegRow(seg, i)))
 }
 
+function makeBadgeEl(status) {
+  const wrap = document.createElement('div')
+  wrap.className = 'status-badge-wrap'
+  const badge = document.createElement('span')
+  badge.className = 'seg-status-badge'
+  badge.textContent = statusLabel(status)
+  badge.style.background = statusBadgeColor(parseStatus(status).base)
+  wrap.appendChild(badge)
+  const tip = tooltipContent(status)
+  if (tip) {
+    const tooltip = document.createElement('div')
+    tooltip.className = 'tooltip'
+    tooltip.style.whiteSpace = 'pre'
+    tooltip.textContent = tip
+    wrap.appendChild(tooltip)
+  }
+  return wrap
+}
+
 function makeSegRow(seg, i) {
   const chunks = parseChunks(seg.raw_segment)
   const translations = Array.isArray(seg.translations) ? [...seg.translations] : []
   const character = extractCharacter(seg.raw_segment)
   const origPreview = cleanText(seg.raw_segment)
-  const transPreview = translations.map(t => t.replace(TAG_RE,'')).filter(Boolean).join(' ')
+  const transPreview = translations.map(t => t.replace(TAG_RE,'')).join('')
   const { base: baseStatus } = parseStatus(seg.status)
 
   const wrapper = document.createElement('div')
   wrapper.className = 'seg-row'
-  wrapper.dataset.baseStatus = baseStatus
+  wrapper.dataset.base = baseStatus
   wrapper.dataset.id = seg.id
   wrapper.style.display = (currentFilter === 'all' || baseStatus === currentFilter) ? '' : 'none'
 
   // Header
   const header = document.createElement('div')
   header.className = 'seg-header'
-  header.innerHTML = `
-    <span class="seg-num">${i+1}</span>
-    <span class="seg-char">${character}</span>
-    <span class="seg-preview">${transPreview || origPreview}</span>
-    <span class="seg-status-badge" title="${statusLabel(seg.status)}">${statusLabel(seg.status)}</span>
-    <span class="seg-chevron">▶</span>`
+  const numEl = document.createElement('span'); numEl.className = 'seg-num'; numEl.textContent = i+1
+  const charEl = document.createElement('span'); charEl.className = 'seg-char'; charEl.textContent = character
+  const prevEl = document.createElement('span'); prevEl.className = 'seg-preview'; prevEl.textContent = transPreview || origPreview
+  const badgeWrap = makeBadgeEl(seg.status)
+  const chevron = document.createElement('span'); chevron.className = 'seg-chevron'; chevron.textContent = '▶'
+  header.appendChild(numEl); header.appendChild(charEl); header.appendChild(prevEl)
+  header.appendChild(badgeWrap); header.appendChild(chevron)
 
   // Editor
   const editor = document.createElement('div')
   editor.className = 'seg-editor'
 
-  // Column headers
   const colHdrs = document.createElement('div')
   colHdrs.className = 'col-headers'
   colHdrs.innerHTML = '<span class="col-header-lbl">Оригинал (EN)</span><span class="col-header-lbl">Перевод (RU)</span>'
   editor.appendChild(colHdrs)
 
-  // Chunk pairs
   const chunkPairsDiv = document.createElement('div')
   chunks.forEach((chunk, ci) => {
     const pair = document.createElement('div')
     pair.className = 'chunk-pair'
-
     const origWrap = document.createElement('div')
     const origBox  = document.createElement('div')
     origBox.className = 'orig-box'
@@ -405,8 +443,7 @@ function makeSegRow(seg, i) {
     const pauseLbl = document.createElement('div')
     pauseLbl.className = 'chunk-label'
     pauseLbl.textContent = chunk.pauseTag || '↵ конец'
-    origWrap.appendChild(origBox)
-    origWrap.appendChild(pauseLbl)
+    origWrap.appendChild(origBox); origWrap.appendChild(pauseLbl)
 
     const transWrap = document.createElement('div')
     const lenDiv    = document.createElement('div')
@@ -424,153 +461,116 @@ function makeSegRow(seg, i) {
       lenDiv.style.color = level==='error'?'#ff5555':level==='warn'?'#aaaa44':'#44aa44'
     }
     updateLen()
-
     transBox.addEventListener('input', () => {
       translations[ci] = transBox.value
       updateLen()
-      scheduleAutosave(seg, translations, wrapper, header, prevBox)
+      scheduleAutosave(seg, translations, wrapper, header, prevEl, prevBox, badgeWrap)
     })
-
-    transWrap.appendChild(transBox)
-    transWrap.appendChild(lenDiv)
-    pair.appendChild(origWrap)
-    pair.appendChild(transWrap)
+    transWrap.appendChild(transBox); transWrap.appendChild(lenDiv)
+    pair.appendChild(origWrap); pair.appendChild(transWrap)
     chunkPairsDiv.appendChild(pair)
   })
   editor.appendChild(chunkPairsDiv)
 
   // Page preview
   const prevHeader = document.createElement('div')
-  prevHeader.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px;border-top:1px solid #333355;padding-top:8px;'
-  const prevLabel = document.createElement('div')
-  prevLabel.className = 'page-preview-label'
-  prevLabel.style.margin = '0'
-  prevLabel.textContent = '📄 Страница целиком:'
+  prevHeader.className = 'page-preview-label'
+  const prevLbl = document.createElement('span')
+  prevLbl.textContent = '📄 Страница целиком:'
   const playBtn = document.createElement('button')
   playBtn.className = 'btn btn-secondary'
   playBtn.style.cssText = 'font-size:11px;padding:3px 10px;background:#334433;color:#aaffaa;'
   playBtn.textContent = '▶ Воспроизвести'
-  prevHeader.appendChild(prevLabel)
-  prevHeader.appendChild(playBtn)
+  prevHeader.appendChild(prevLbl); prevHeader.appendChild(playBtn)
+
   const prevBox = document.createElement('div')
   prevBox.className = 'page-preview-box'
-  prevBox.dataset.previewFor = seg.id
+  const initPreview = translations.map(t => t.replace(TAG_RE,'')).join('')
+  prevBox.textContent = wrapToLines(initPreview)
+
   editor.appendChild(prevHeader)
   editor.appendChild(prevBox)
 
-  // Animation state
-  let animTimer = null
-  let animating = false
-
-  playBtn.addEventListener('click', () => {
-    if (animating) {
-      // Stop
-      clearTimeout(animTimer)
-      animating = false
-      playBtn.textContent = '▶ Воспроизвести'
-      playBtn.style.background = '#334433'
-      playBtn.style.color = '#aaffaa'
-      const preview = translations.map(t => t.replace(TAG_RE,'')).join('')
-      prevBox.textContent = wrapToLines(preview)
-    } else {
-      // Build schedule from chunks + translations
-      const schedule = chunks.map((chunk, ci) => {
-        const text = (translations[ci] || '').replace(TAG_RE, '')
-        // Pause from <E003 X> in pauseTag
-        let pauseMs = 0
-        const e003 = chunk.pauseTag.match(/<E003\s+(\d+)>/)
-        if (e003) pauseMs = Math.round(parseInt(e003[1]) / 30 * 1000)
-        // Speed from <E025 X> in prefixTags
-        let intervalMs = 100
-        const e025 = chunk.prefixTags.match(/<E025\s+(\d+)>/)
-        if (e025) intervalMs = Math.round(parseInt(e025[1]) / 30 * 1000)
-        return { text, pauseMs, intervalMs }
-      }).filter(s => s.text)
-
-      if (!schedule.length) return
-
-      animating = true
-      playBtn.textContent = '⏹ Стоп'
-      playBtn.style.background = '#443333'
-      playBtn.style.color = '#ffaaaa'
-      prevBox.textContent = ''
-
-      let chunkIdx = 0
-      let charPos  = 0
-      let displayed = ''
-
-      function tick() {
-        if (!animating) return
-        if (chunkIdx >= schedule.length) {
-          // Done
-          animating = false
-          playBtn.textContent = '▶ Воспроизвести'
-          playBtn.style.background = '#334433'
-          playBtn.style.color = '#aaffaa'
-          return
-        }
-        const { text, pauseMs, intervalMs } = schedule[chunkIdx]
-        charPos++
-        prevBox.textContent = wrapToLines(displayed + text.slice(0, charPos))
-
-        if (charPos >= text.length) {
-          // Chunk done
-          displayed += text
-          chunkIdx++
-          charPos = 0
-          if (pauseMs > 0) {
-            animTimer = setTimeout(tick, pauseMs)
-          } else {
-            const next = schedule[chunkIdx]
-            animTimer = setTimeout(tick, next ? next.intervalMs : 100)
-          }
-        } else {
-          animTimer = setTimeout(tick, intervalMs)
-        }
-      }
-
-      const firstInterval = schedule[0]?.intervalMs || 100
-      animTimer = setTimeout(tick, firstInterval)
-    }
-  })
-
-  // Footer
+  // Footer: approve button + save indicator
   const footer = document.createElement('div')
   footer.className = 'editor-footer'
-  const statusSelect = document.createElement('select')
-  statusSelect.className = 'status-select'
-  for (const [k,v] of Object.entries(STATUS_BASE_LABELS)) {
-    const opt = document.createElement('option')
-    opt.value = k; opt.textContent = `${STATUS_ICONS[k]} ${v}`
-    if (parseStatus(seg.status).base === k) opt.selected = true
-    statusSelect.appendChild(opt)
-  }
-  statusSelect.addEventListener('change', async () => {
-    const newBase = statusSelect.value
-    const newStatus = makeStatusString(newBase, currentUser)
+
+  const approveBtn = document.createElement('button')
+  approveBtn.className = 'btn btn-approve'
+  approveBtn.textContent = '✓ Одобрить'
+  approveBtn.addEventListener('click', async () => {
+    if (!currentUser) { alert('Выберите имя сначала.'); return }
+    const newStatus = makeStatus('approved', currentUser)
     seg.status = newStatus
-    wrapper.dataset.baseStatus = newBase
-    header.querySelector('.seg-status-badge').textContent = statusLabel(newStatus)
-    header.querySelector('.seg-status-badge').title = statusLabel(newStatus)
+    wrapper.dataset.base = 'approved'
+    // Rebuild badge
+    badgeWrap.innerHTML = ''
+    const newBadge = makeBadgeEl(newStatus)
+    badgeWrap.appendChild(newBadge.firstChild)
+    if (newBadge.children[1]) badgeWrap.appendChild(newBadge.children[1])
     await db.from('segments').update({ status: newStatus }).eq('id', seg.id)
     updateStats()
-    if (currentFilter !== 'all' && newBase !== currentFilter)
+    if (currentFilter !== 'all' && 'approved' !== currentFilter)
       wrapper.style.display = 'none'
   })
 
   const saveInd = document.createElement('span')
   saveInd.className = 'save-indicator'
   saveInd.dataset.saveFor = seg.id
-  footer.appendChild(statusSelect)
+  footer.appendChild(approveBtn)
   footer.appendChild(saveInd)
   editor.appendChild(footer)
 
-  // Toggle
+  // Animation
+  let animTimer = null, animating = false
+  playBtn.addEventListener('click', () => {
+    if (animating) {
+      clearTimeout(animTimer); animating = false
+      playBtn.textContent = '▶ Воспроизвести'
+      playBtn.style.background = '#334433'; playBtn.style.color = '#aaffaa'
+      prevBox.textContent = wrapToLines(translations.map(t=>t.replace(TAG_RE,'')).join(''))
+    } else {
+      const schedule = chunks.map((chunk, ci) => {
+        const text = (translations[ci]||'').replace(TAG_RE,'')
+        let pauseMs = 0, intervalMs = 100
+        const e003 = chunk.pauseTag.match(/<E003\s+(\d+)>/)
+        if (e003) pauseMs = Math.round(parseInt(e003[1])/30*1000)
+        const e025 = chunk.prefixTags.match(/<E025\s+(\d+)>/)
+        if (e025) intervalMs = Math.round(parseInt(e025[1])/30*1000)
+        return { text, pauseMs, intervalMs }
+      }).filter(s => s.text)
+      if (!schedule.length) return
+      animating = true
+      playBtn.textContent = '⏹ Стоп'
+      playBtn.style.background = '#443333'; playBtn.style.color = '#ffaaaa'
+      prevBox.textContent = ''
+      let chunkIdx=0, charPos=0, displayed=''
+      function tick() {
+        if (!animating) return
+        if (chunkIdx >= schedule.length) {
+          animating=false; playBtn.textContent='▶ Воспроизвести'
+          playBtn.style.background='#334433'; playBtn.style.color='#aaffaa'; return
+        }
+        const { text, pauseMs, intervalMs } = schedule[chunkIdx]
+        charPos++
+        prevBox.textContent = wrapToLines(displayed + text.slice(0, charPos))
+        if (charPos >= text.length) {
+          displayed += text; chunkIdx++; charPos=0
+          animTimer = pauseMs>0
+            ? setTimeout(tick, pauseMs)
+            : setTimeout(tick, schedule[chunkIdx]?.intervalMs||100)
+        } else { animTimer = setTimeout(tick, intervalMs) }
+      }
+      animTimer = setTimeout(tick, schedule[0]?.intervalMs||100)
+    }
+  })
+
+  // Toggle open/close
   let open = false
   header.addEventListener('click', () => {
     open = !open
     editor.classList.toggle('open', open)
-    header.querySelector('.seg-chevron').textContent = open ? '▼' : '▶'
+    chevron.textContent = open ? '▼' : '▶'
   })
 
   wrapper.appendChild(header)
@@ -578,43 +578,71 @@ function makeSegRow(seg, i) {
   return wrapper
 }
 
-function scheduleAutosave(seg, translations, wrapper, header, prevBox) {
+function updateBadge(badgeWrap, status) {
+  badgeWrap.innerHTML = ''
+  const { base, name, ts } = parseStatus(status)
+  const badge = document.createElement('span')
+  badge.className = 'seg-status-badge'
+  badge.textContent = statusLabel(status)
+  badge.style.background = statusBadgeColor(base)
+  badgeWrap.appendChild(badge)
+  const tip = tooltipContent(status)
+  if (tip) {
+    const tooltip = document.createElement('div')
+    tooltip.className = 'tooltip'
+    tooltip.style.whiteSpace = 'pre'
+    tooltip.textContent = tip
+    badgeWrap.appendChild(tooltip)
+  }
+}
+
+function scheduleAutosave(seg, translations, wrapper, header, prevEl, prevBox, badgeWrap) {
   const ind = document.querySelector(`[data-save-for="${seg.id}"]`)
-  if (ind) { ind.className = 'save-indicator saving'; ind.textContent = 'Сохранение...' }
+  if (ind) { ind.className='save-indicator saving'; ind.textContent='Сохранение...' }
   clearTimeout(saveTimers[seg.id])
   saveTimers[seg.id] = setTimeout(async () => {
     const hasTranslation = translations.some(t => t.trim())
-    const { base: currentBase } = parseStatus(seg.status)
+    const { base: currentBase, name: currentName } = parseStatus(seg.status)
 
-    if (hasTranslation && currentBase === 'untranslated') {
-      const newStatus = makeStatusString('translated', currentUser)
-      seg.status = newStatus
-      wrapper.dataset.baseStatus = 'translated'
-      header.querySelector('.seg-status-badge').textContent = statusLabel(newStatus)
-      header.querySelector('.seg-status-badge').title = statusLabel(newStatus)
-      const sel = wrapper.querySelector('.status-select')
-      if (sel) sel.value = 'translated'
+    let newStatus = seg.status
+    if (!hasTranslation) {
+      newStatus = 'untranslated'
+    } else if (currentBase === 'untranslated') {
+      newStatus = makeStatus('translated', currentUser)
+    } else if (currentBase === 'translated' && currentName !== currentUser) {
+      newStatus = makeStatus('redacted', currentUser)
+    } else if (currentBase === 'approved') {
+      // Any edit resets approval to redacted
+      newStatus = makeStatus('redacted', currentUser)
     }
+    // If translated by same person, or already redacted — keep as-is but update name
+    else if (currentBase === 'redacted' && currentName !== currentUser) {
+      newStatus = makeStatus('redacted', currentUser)
+    }
+
+    seg.status = newStatus
+    const newBase = parseStatus(newStatus).base
+    wrapper.dataset.base = newBase
+    updateBadge(badgeWrap, newStatus)
 
     // Update header preview
     const preview = translations.map(t => t.replace(TAG_RE,'')).join('')
-    const previewEl = header.querySelector('.seg-preview')
-    if (previewEl) previewEl.textContent = preview || cleanText(seg.raw_segment)
-
-    // Update page preview box
+    prevEl.textContent = preview || cleanText(seg.raw_segment)
     if (prevBox) prevBox.textContent = wrapToLines(preview)
 
     const { error } = await db.from('segments')
-      .update({ translations, status: seg.status })
+      .update({ translations, status: newStatus })
       .eq('id', seg.id)
 
     if (ind) {
       ind.className = error ? 'save-indicator error' : 'save-indicator saved'
       ind.textContent = error ? 'Ошибка сохранения' : '✓ Сохранено'
-      setTimeout(() => { if (ind) { ind.textContent=''; ind.className='save-indicator' } }, 2000)
+      setTimeout(() => { if(ind){ind.textContent='';ind.className='save-indicator'} }, 2000)
     }
     seg.translations = [...translations]
     updateStats()
+    if (currentFilter !== 'all' && newBase !== currentFilter)
+      wrapper.style.display = 'none'
   }, 1000)
 }
 
@@ -625,7 +653,7 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.classList.add('active')
     currentFilter = btn.dataset.filter
     document.querySelectorAll('.seg-row').forEach(row => {
-      row.style.display = (currentFilter==='all' || row.dataset.baseStatus===currentFilter) ? '' : 'none'
+      row.style.display = (currentFilter==='all'||row.dataset.base===currentFilter)?'':'none'
     })
   })
 })
@@ -633,12 +661,10 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 // Download
 window.downloadFile = async () => {
   const { data: segs } = await db.from('segments').select('*').eq('file_id', fileId).order('seg_index')
-  const data = { raw_script: fileData.raw_script, segments: segs.map(s => ({ raw_segment: s.raw_segment, translations: s.translations, status: s.status })) }
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const data = { raw_script: fileData.raw_script, segments: segs.map(s=>({ raw_segment:s.raw_segment, translations:s.translations, status:s.status })) }
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'})
   const a = document.createElement('a')
-  a.href = URL.createObjectURL(blob)
-  a.download = fileData.name.replace('.txt','').replace('.myformat','') + '.json'
-  a.click()
+  a.href=URL.createObjectURL(blob); a.download=fileData.name.replace('.txt','').replace('.myformat','')+'.json'; a.click()
 }
 
 // Init
