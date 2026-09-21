@@ -181,14 +181,23 @@ const BADGE_TAGS  = { '<E025':'spd','<E085':'wait','<E330':'shk','<E333':'shk','
 // ── Status helpers ──
 // Format: "base:name" or "approved:name:timestamp"
 function parseStatus(s) {
-  if (!s) return { base:'untranslated', name:null, ts:null }
-  const parts = s.split(':')
-  return { base: parts[0], name: parts[1]||null, ts: parts[2]||null }
+  if (!s) return { base:'untranslated', name:null }
+  const idx = s.indexOf(':')
+  if (idx === -1) return { base: s, name: null }
+  return { base: s.slice(0, idx), name: s.slice(idx + 1) }
 }
 
-function makeStatus(base, name, ts=null) {
+function makeStatus(base, name, existingStatus=null) {
   if (base === 'untranslated') return 'untranslated'
-  if (base === 'approved') return `approved:${name}:${ts || new Date().toISOString()}`
+  if (base === 'approved') {
+    // Accumulate approvers
+    const existing = existingStatus ? parseStatus(existingStatus) : null
+    const prevApprovers = (existing?.base === 'approved' && existing?.name)
+      ? existing.name.split(',')
+      : []
+    const approvers = [...new Set([...prevApprovers, name])].join(',')
+    return `approved:${approvers}`
+  }
   return `${base}:${name}`
 }
 
@@ -202,11 +211,11 @@ function statusLabel(s) {
 }
 
 function tooltipContent(s) {
-  const { base, name, ts } = parseStatus(s)
+  const { base, name } = parseStatus(s)
   if (base === 'untranslated') return null
-  if (base === 'approved' && name && ts) {
-    const date = new Date(ts).toLocaleString('ru-RU')
-    return `✓ Одобрено: ${name}\n🕐 ${date}`
+  if (base === 'approved' && name) {
+    const approvers = name.split(',').map(n => `✓ ${n}`).join('\n')
+    return `Одобрено:\n${approvers}`
   }
   if (name) return `Последнее изменение: ${name}`
   return null
@@ -500,7 +509,7 @@ function makeSegRow(seg, i) {
   approveBtn.textContent = '✓ Одобрить'
   approveBtn.addEventListener('click', async () => {
     if (!currentUser) { alert('Выберите имя сначала.'); return }
-    const newStatus = makeStatus('approved', currentUser)
+        const newStatus = makeStatus('approved', currentUser, seg.status)
     seg.status = newStatus
     wrapper.dataset.base = 'approved'
     // Rebuild badge
