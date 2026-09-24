@@ -594,15 +594,33 @@ function makeSegRow(seg, i) {
       playBtn.style.background = '#334433'; playBtn.style.color = '#aaffaa'
       prevBox.textContent = wrapToLines(translations.map(t=>t.replace(TAG_RE,'')).join(''))
     } else {
-      const schedule = chunks.map((chunk, ci) => {
-        const text = (translations[ci]||'').replace(TAG_RE,'')
-        let pauseMs = 0, intervalMs = 100
-        const e003 = chunk.pauseTag.match(/<E003\s+(\d+)>/)
-        if (e003) pauseMs = Math.round(parseInt(e003[1])/30*1000)
+            // Build schedule from translations, respecting tags typed by translator
+      const schedule = []
+      chunks.forEach((chunk, ci) => {
+        const raw = translations[ci] || ''
+        // Get speed from original chunk's prefixTags
+        let intervalMs = 100
         const e025 = chunk.prefixTags.match(/<E025\s+(\d+)>/)
         if (e025) intervalMs = Math.round(parseInt(e025[1])/30*1000)
-        return { text, pauseMs, intervalMs }
-      }).filter(s => s.text)
+
+        // Split the translation on <E003 X> tags typed by translator
+        const subParts = raw.split(/(<E003\s+\d+>)/)
+        subParts.forEach((part, pi) => {
+          if (/^<E003\s+\d+>$/.test(part)) return // skip the tag itself
+          const text = part.replace(TAG_RE, '').replace(/\s+$/, '')
+          // The pause comes from the E003 tag that follows this part
+          const nextPart = subParts[pi + 1] || ''
+          let pauseMs = 0
+          const e003 = nextPart.match(/<E003\s+(\d+)>/)
+          if (e003) pauseMs = Math.round(parseInt(e003[1])/30*1000)
+          // Also check original chunk's pauseTag for the last sub-part
+          else if (pi === subParts.length - 1 || pi === subParts.length - 2) {
+            const e003orig = chunk.pauseTag.match(/<E003\s+(\d+)>/)
+            if (e003orig) pauseMs = Math.round(parseInt(e003orig[1])/30*1000)
+          }
+          if (text) schedule.push({ text, pauseMs, intervalMs })
+        })
+      })
       if (!schedule.length) return
       animating = true
       playBtn.textContent = '⏹ Стоп'
