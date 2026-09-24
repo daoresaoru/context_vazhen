@@ -164,7 +164,7 @@ const SUPABASE_URL = 'https://miyytqwqfjrtkbwqyiuy.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1peXl0cXdxZmpydGtid3F5aXV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5NTcxNzAsImV4cCI6MjEwMzUzMzE3MH0.zhCMyP5wDrt_5mTM8qYNyj0GyOVqPbEOvXd7Hckym6o'
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-const MAX_LINE_PX = 394
+const MAX_LINE_PX = 355
 const TAG_RE = /<[^>]+>/g
 const CHARACTER_TAGS = {
   '<E041 1 0>':'Рюноскэ','<E041 3 2>':'Сусато','<E041 4 4>':'Айрис',
@@ -553,8 +553,13 @@ function makeSegRow(seg, i) {
   const approveBtn = document.createElement('button')
   approveBtn.className = 'btn btn-approve'
   approveBtn.textContent = '✓ Одобрить'
-  approveBtn.addEventListener('click', async () => {
+    approveBtn.addEventListener('click', async () => {
     if (!currentUser) { alert('Выберите имя сначала.'); return }
+    const { name: lastEditor } = parseStatus(seg.status)
+    if (lastEditor && lastEditor.split(',').includes(currentUser) && parseStatus(seg.status).base !== 'approved') {
+      alert('Вы не можете одобрить сегмент, который вы же последний редактировали.')
+      return
+    }
         const newStatus = makeStatus('approved', currentUser, seg.status)
     seg.status = newStatus
     wrapper.dataset.base = 'approved'
