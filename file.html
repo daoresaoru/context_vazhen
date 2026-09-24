@@ -116,6 +116,7 @@
       <p class="text-muted" id="fileDate"></p>
     </div>
     <button class="btn btn-success" onclick="downloadFile()">⬇ .json</button>
+    <button class="btn btn-primary" onclick="injectAndDownload()">💉 Скачать скрипт</button>
   </div>
 
   <div class="card" style="margin-bottom:16px;">
@@ -163,7 +164,7 @@ const SUPABASE_URL = 'https://miyytqwqfjrtkbwqyiuy.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1peXl0cXdxZmpydGtid3F5aXV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5NTcxNzAsImV4cCI6MjEwMzUzMzE3MH0.zhCMyP5wDrt_5mTM8qYNyj0GyOVqPbEOvXd7Hckym6o'
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-const MAX_LINE_PX = 394
+const MAX_LINE_PX = 355
 const TAG_RE = /<[^>]+>/g
 const CHARACTER_TAGS = {
   '<E041 1 0>':'Рюноскэ','<E041 3 2>':'Сусато','<E041 4 4>':'Айрис',
@@ -342,6 +343,51 @@ const params = new URLSearchParams(location.search)
 const fileId = parseInt(params.get('id'))
 let fileData = null, segments = [], currentFilter = 'all'
 const saveTimers = {}
+
+function injectTranslations(segment, translations) {
+  const tokens = segment.split(/(<[^>]+>)/)
+  const textIndices = tokens.reduce((acc, t, i) => {
+    if (!/^<[^>]+>$/.test(t) && t.trim()) acc.push(i)
+    return acc
+  }, [])
+  const replacement = {}
+  textIndices.forEach((tokIdx, ti) => {
+    const trans = (translations[ti] || '').trim()
+    if (trans) replacement[tokIdx] = trans
+  })
+  return tokens.map((t, i) => replacement[i] !== undefined ? replacement[i] : t).join('')
+}
+
+window.injectAndDownload = async () => {
+  const { data: segs } = await db.from('segments').select('*')
+    .eq('file_id', fileId).order('seg_index')
+
+  const untranslated = segs.filter(s => parseStatus(s.status).base === 'untranslated').length
+  if (untranslated > 0) {
+    const go = confirm(`${untranslated} сегмент(ов) ещё не переведено.\nНепереведённые строки останутся на английском. Продолжить?`)
+    if (!go) return
+  }
+
+  // Rebuild full segment list (including empty ones between <PAGE>)
+  const allRawSegs = fileData.raw_script.split('<PAGE>')
+  const segByIndex = {}
+  for (const s of segs) segByIndex[s.seg_index] = s
+
+  const resultSegs = allRawSegs.map((raw, i) => {
+    const seg = segByIndex[i]
+    if (!seg) return raw
+    const translations = Array.isArray(seg.translations) ? seg.translations : []
+    if (!translations.some(t => t.trim())) return raw
+    return injectTranslations(raw, translations)
+  })
+
+  const result = resultSegs.join('<PAGE>')
+  const blob = new Blob([result], { type: 'text/plain;charset=utf-8' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = fileData.name.replace('.json','').replace('.myformat','').replace('.txt','') + '_translated.txt'
+  a.click()
+}
 
 async function load() {
   const { data: f } = await db.from('files').select('*').eq('id', fileId).single()
