@@ -87,7 +87,8 @@
     .save-indicator.saving { color: #aaaa44; }
     .save-indicator.saved  { color: #44aa44; }
     .save-indicator.error  { color: #aa4444; }
-    .page-preview-box { background: #0a0a1a; border: 2px solid #6655aa; border-radius: 4px; padding: 8px 12px; font-family: 'Palatino Linotype', serif; font-size: 16px; color: #f0f0e0; min-height: 52px; white-space: pre; overflow: hidden; }
+    .page-preview-box { background: #0a0a1a; border: 2px solid #6655aa; border-radius: 4px; padding: 8px 12px; font-family: 'Palatino Linotype', serif; font-size: 16px; color: #f0f0e0; min-height: 52px; }
+.page-preview-overflow { color: #ff5555; font-size: 11px; margin-top: 4px; display: none; }
     .page-preview-label { display: flex; align-items: center; justify-content: space-between; color: #8888aa; font-size: 10px; font-style: italic; margin: 8px 0 4px; border-top: 1px solid #333355; padding-top: 8px; }
 
     /* Color tags */
@@ -164,7 +165,7 @@ const SUPABASE_URL = 'https://miyytqwqfjrtkbwqyiuy.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1peXl0cXdxZmpydGtid3F5aXV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5NTcxNzAsImV4cCI6MjEwMzUzMzE3MH0.zhCMyP5wDrt_5mTM8qYNyj0GyOVqPbEOvXd7Hckym6o'
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-const MAX_LINE_PX = 394
+const MAX_LINE_PX = 355
 const TAG_RE = /<[^>]+>/g
 const CHARACTER_TAGS = {
   '<E041 1 0>':'Рюноскэ','<E041 3 2>':'Сусато','<E041 4 4>':'Айрис',
@@ -325,21 +326,64 @@ function lineLengthLevel(text) {
   return { level:'ok', px: Math.round(maxPx) }
 }
 
-function wrapToLines(text) {
-  if (!text) return ''
-  const lines = []
-  for (const para of text.split('\n')) {
-    if (!para) { lines.push(''); continue }
-    const words = para.split(' ')
+function renderPreview(text, previewBox, overflowWarn) {
+  if (!text) { previewBox.innerHTML = ''; overflowWarn.style.display = 'none'; return }
+
+  // Split into logical lines respecting \n and <CNTR>
+  const rawLines = text.split('\n')
+  const allRenderedLines = []
+
+  for (const rawLine of rawLines) {
+    // Check for CNTR tag
+    const hasCNTR = rawLine.includes('<CNTR>')
+    const cleanLine = rawLine.replace(TAG_RE, '').trim()
+    if (!cleanLine) continue
+
+    // Word-wrap this line at pixel limit
+    const words = cleanLine.split(' ')
     let current = ''
+    const wrappedSegments = []
     for (const word of words) {
       const candidate = current ? current + ' ' + word : word
-      if (lineWidth(candidate) <= MAX_LINE_PX) { current = candidate }
-      else { if (current) lines.push(current); current = word }
+      if (lineWidth(candidate) <= MAX_LINE_PX) {
+        current = candidate
+      } else {
+        if (current) wrappedSegments.push(current)
+        current = word
+      }
     }
-    if (current) lines.push(current)
+    if (current) wrappedSegments.push(current)
+
+    for (const seg of wrappedSegments) {
+      allRenderedLines.push({ text: seg, centered: hasCNTR })
+    }
   }
-  return lines.map((l,i) => i >= 2 ? '⛔ ' + l : l).join('\n')
+
+  // Render lines — first 2 normal, rest are overflow
+  previewBox.innerHTML = ''
+  const visibleLines = allRenderedLines.slice(0, 2)
+  const overflowLines = allRenderedLines.slice(2)
+
+  for (const line of visibleLines) {
+    const div = document.createElement('div')
+    div.textContent = line.text
+    if (line.centered) div.style.textAlign = 'center'
+    previewBox.appendChild(div)
+  }
+
+  if (overflowLines.length > 0) {
+    for (const line of overflowLines) {
+      const div = document.createElement('div')
+      div.textContent = '⛔ ' + line.text
+      div.style.color = '#ff5555'
+      if (line.centered) div.style.textAlign = 'center'
+      previewBox.appendChild(div)
+    }
+    overflowWarn.style.display = 'block'
+    overflowWarn.textContent = `⚠️ Текст не помещается: +${overflowLines.length} строк(и) лишних`
+  } else {
+    overflowWarn.style.display = 'none'
+  }
 }
 
 // ── State ──
@@ -523,7 +567,7 @@ function makeSegRow(seg, i) {
     transBox.addEventListener('input', () => {
       translations[ci] = transBox.value
       updateLen()
-      scheduleAutosave(seg, translations, wrapper, header, prevEl, prevBox, badgeWrap)
+      scheduleAutosave(seg, translations, wrapper, header, prevEl, prevBox, overflowWarn, badgeWrap)
     })
     transWrap.appendChild(transBox); transWrap.appendChild(lenDiv)
     pair.appendChild(origWrap); pair.appendChild(transWrap)
@@ -544,11 +588,12 @@ function makeSegRow(seg, i) {
 
   const prevBox = document.createElement('div')
   prevBox.className = 'page-preview-box'
-  const initPreview = translations.map(t => t.replace(TAG_RE,'')).join('')
-  prevBox.textContent = wrapToLines(initPreview)
-
+  prevBox.dataset.previewFor = seg.id
+  const overflowWarn = document.createElement('div')
+  overflowWarn.className = 'page-preview-overflow'
   editor.appendChild(prevHeader)
   editor.appendChild(prevBox)
+  editor.appendChild(overflowWarn)
 
   // Footer: approve button + save indicator
   const footer = document.createElement('div')
@@ -592,7 +637,7 @@ function makeSegRow(seg, i) {
       clearTimeout(animTimer); animating = false
       playBtn.textContent = '▶ Воспроизвести'
       playBtn.style.background = '#334433'; playBtn.style.color = '#aaffaa'
-      prevBox.textContent = wrapToLines(translations.map(t=>t.replace(TAG_RE,'')).join(''))
+      renderPreview(translations.map(t=>t.replace(TAG_RE,'')).join(''), prevBox, overflowWarn)
     } else {
             // Build schedule from translations, respecting tags typed by translator
       const schedule = []
@@ -635,7 +680,7 @@ function makeSegRow(seg, i) {
         }
         const { text, pauseMs, intervalMs } = schedule[chunkIdx]
         charPos++
-        prevBox.textContent = wrapToLines(displayed + text.slice(0, charPos))
+        renderPreview(displayed + text.slice(0, charPos), prevBox, overflowWarn)
         if (charPos >= text.length) {
           displayed += text; chunkIdx++; charPos=0
           animTimer = pauseMs>0
@@ -678,7 +723,7 @@ function updateBadge(badgeWrap, status) {
   }
 }
 
-function scheduleAutosave(seg, translations, wrapper, header, prevEl, prevBox, badgeWrap) {
+function scheduleAutosave(seg, translations, wrapper, header, prevEl, prevBox, overflowWarn, badgeWrap) {
   const ind = document.querySelector(`[data-save-for="${seg.id}"]`)
   if (ind) { ind.className='save-indicator saving'; ind.textContent='Сохранение...' }
   clearTimeout(saveTimers[seg.id])
@@ -710,7 +755,7 @@ function scheduleAutosave(seg, translations, wrapper, header, prevEl, prevBox, b
     // Update header preview
     const preview = translations.map(t => t.replace(TAG_RE,'')).join('')
     prevEl.textContent = preview || cleanText(seg.raw_segment)
-    if (prevBox) prevBox.textContent = wrapToLines(preview)
+    if (prevBox) renderPreview(preview, prevBox, overflowWarn)
 
     const { error } = await db.from('segments')
       .update({ translations, status: newStatus })
