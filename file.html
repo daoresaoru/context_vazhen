@@ -640,30 +640,42 @@ function makeSegRow(seg, i) {
       renderPreview(translations.map(t=>t.replace(TAG_RE,'')).join(''), prevBox, overflowWarn)
     } else {
             // Build schedule from translations, respecting tags typed by translator
-      const schedule = []
+            const schedule = []
       chunks.forEach((chunk, ci) => {
         const raw = translations[ci] || ''
-        // Get speed from original chunk's prefixTags
-        let intervalMs = 100
-        const e025 = chunk.prefixTags.match(/<E025\s+(\d+)>/)
-        if (e025) intervalMs = Math.round(parseInt(e025[1])/30*1000)
+        // Base speed from original chunk's prefixTags
+        let baseIntervalMs = 100
+        const e025base = chunk.prefixTags.match(/<E025\s+(\d+)>/)
+        if (e025base) baseIntervalMs = Math.round(parseInt(e025base[1])/30*1000)
 
-        // Split the translation on <E003 X> tags typed by translator
-        const subParts = raw.split(/(<E003\s+\d+>)/)
+        // Split on both <E003> (pause) and <E025> (speed change)
+        const subParts = raw.split(/(<E003\s+\d+>|<E025\s+\d+>)/)
+        let currentIntervalMs = baseIntervalMs
+
         subParts.forEach((part, pi) => {
-          if (/^<E003\s+\d+>$/.test(part)) return // skip the tag itself
-          const text = part.replace(TAG_RE, '').replace(/\s+$/, '')
-          // The pause comes from the E003 tag that follows this part
+          // Speed change tag — update current speed for following text
+          if (/^<E025\s+(\d+)>$/.test(part)) {
+            const m = part.match(/<E025\s+(\d+)>/)
+            currentIntervalMs = Math.round(parseInt(m[1])/30*1000)
+            return
+          }
+          // Pause tag — skip, handled by previous text chunk
+          if (/^<E003\s+\d+>$/.test(part)) return
+
+          const text = part.replace(TAG_RE, '')
+          if (!text.trim()) return
+
+          // Look ahead for a pause tag immediately after this text
           const nextPart = subParts[pi + 1] || ''
           let pauseMs = 0
           const e003 = nextPart.match(/<E003\s+(\d+)>/)
-          if (e003) pauseMs = Math.round(parseInt(e003[1])/30*1000)
-          // Also check original chunk's pauseTag for the last sub-part
-          else if (pi === subParts.length - 1 || pi === subParts.length - 2) {
+          if (e003) {
+            pauseMs = Math.round(parseInt(e003[1])/30*1000)
+          } else if (pi >= subParts.length - 2) {
             const e003orig = chunk.pauseTag.match(/<E003\s+(\d+)>/)
             if (e003orig) pauseMs = Math.round(parseInt(e003orig[1])/30*1000)
           }
-          if (text) schedule.push({ text, pauseMs, intervalMs })
+          schedule.push({ text, pauseMs, intervalMs: currentIntervalMs })
         })
       })
       if (!schedule.length) return
