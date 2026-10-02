@@ -318,69 +318,77 @@ const _canvas = document.createElement('canvas')
 const _ctx    = _canvas.getContext('2d')
 _ctx.font     = '16px "Palatino Linotype","Book Antiqua",Palatino,serif'
 function lineWidth(text) { return _ctx.measureText(text.replace(TAG_RE,'')).width }
-function lineLengthLevel(text) {
+// Width already used on the current line by all previous chunks
+function carryPx(translations, upto) {
+  const prev = translations.slice(0, upto).map(t => t || '').join('')
+  return lineWidth(prev.split('\n').pop())
+}
+// startPx is added to the first line only (the line that continues from previous chunks)
+function lineLengthLevel(text, startPx = 0) {
   if (!text.trim()) return { level:'', px:0 }
-  const maxPx = Math.max(...text.split('\n').map(l => lineWidth(l)))
+  const maxPx = Math.max(...text.split('\n').map((l, i) => lineWidth(l) + (i === 0 ? startPx : 0)))
   if (maxPx > MAX_LINE_PX)      return { level:'error', px: Math.round(maxPx) }
   if (maxPx > MAX_LINE_PX - 30) return { level:'warn',  px: Math.round(maxPx) }
   return { level:'ok', px: Math.round(maxPx) }
 }
 
-function renderPreview(text, previewBox, overflowWarn) {
-  if (!text) { previewBox.innerHTML = ''; overflowWarn.style.display = 'none'; return }
+// Full text of the page for preview: translations joined, with <CNTR> inherited
+// from the original chunk's tags (the injector keeps original tags in the output).
+function buildPreviewText(chunks, translations) {
+  return chunks.map((c, i) => {
+    const t = translations[i] || ''
+    const inherit = t.trim() && c.prefixTags.includes('<CNTR>') && !t.includes('<CNTR>')
+    return (inherit ? '<CNTR>' : '') + t
+  }).join('')
+}
 
-  // Split into logical lines respecting \n and <CNTR>
-  const rawLines = text.split('\n')
-  const allRenderedLines = []
-
-  for (const rawLine of rawLines) {
-    // Check for CNTR tag
+function layoutPreview(text) {
+  const lines = []
+  for (const rawLine of text.split('\n')) {
     const hasCNTR = rawLine.includes('<CNTR>')
     const cleanLine = rawLine.replace(TAG_RE, '').trim()
     if (!cleanLine) continue
-
-    // Word-wrap this line at pixel limit
-    const words = cleanLine.split(' ')
     let current = ''
-    const wrappedSegments = []
-    for (const word of words) {
+    for (const word of cleanLine.split(' ')) {
       const candidate = current ? current + ' ' + word : word
-      if (lineWidth(candidate) <= MAX_LINE_PX) {
-        current = candidate
-      } else {
-        if (current) wrappedSegments.push(current)
-        current = word
-      }
+      if (lineWidth(candidate) <= MAX_LINE_PX) current = candidate
+      else { if (current) lines.push({ text: current, centered: hasCNTR }); current = word }
     }
-    if (current) wrappedSegments.push(current)
-
-    for (const seg of wrappedSegments) {
-      allRenderedLines.push({ text: seg, centered: hasCNTR })
-    }
+    if (current) lines.push({ text: current, centered: hasCNTR })
   }
+  return lines
+}
 
-  // Render lines — first 2 normal, rest are overflow
+// reveal = number of non-whitespace characters to show (Infinity = all).
+// The layout is always computed from the FULL text, so the animation
+// is guaranteed to end up identical to the static output.
+function renderPreview(text, previewBox, overflowWarn, reveal = Infinity) {
+  const lines = layoutPreview(text || '')
   previewBox.innerHTML = ''
-  const visibleLines = allRenderedLines.slice(0, 2)
-  const overflowLines = allRenderedLines.slice(2)
+  if (!lines.length) { overflowWarn.style.display = 'none'; return }
 
-  for (const line of visibleLines) {
+  let remaining = reveal
+  lines.forEach((line, li) => {
+    if (remaining <= 0) return
+    let shown = ''
+    for (const ch of line.text) {
+      if (/\s/.test(ch)) { if (remaining > 0) shown += ch; continue }
+      if (remaining <= 0) break
+      shown += ch; remaining--
+    }
+    if (!shown) return
     const div = document.createElement('div')
-    div.textContent = line.text
+    const over = li >= 2
+    div.textContent = (over ? '⛔ ' : '') + shown
+    if (over) div.style.color = '#ff5555'
     if (line.centered) div.style.textAlign = 'center'
     previewBox.appendChild(div)
-  }
+  })
 
-  if (overflowLines.length > 0) {
-    for (const line of overflowLines) {
-      const div = document.createElement('div')
-      div.textContent = '⛔ ' + line.text
-      div.style.color = '#ff5555'
-      if (line.centered) div.style.textAlign = 'center'
-      previewBox.appendChild(div)
-    }
+  const extra = lines.length - 2
+  if (extra > 0) {
     overflowWarn.style.display = 'block'
-    overflowWarn.textContent = `⚠️ Текст не помещается: +${overflowLines.length} строк(и) лишних`
+    overflowWarn.textContent = `⚠️ Текст не помещается: +${extra} строк(и) лишних`
   } else {
     overflowWarn.style.display = 'none'
   }
@@ -535,6 +543,11 @@ function makeSegRow(seg, i) {
   colHdrs.innerHTML = '<span class="col-header-lbl">Оригинал (EN)</span><span class="col-header-lbl">Перевод (RU)</span>'
   editor.appendChild(colHdrs)
 
+  const lenUpdaters = []
+  function refreshViews() {
+    lenUpdaters.forEach(f => f())
+    renderPreview(buildPreviewText(chunks, translations), prevBox, overflowWarn)
+  }
   const chunkPairsDiv = document.createElement('div')
   chunks.forEach((chunk, ci) => {
     const pair = document.createElement('div')
@@ -558,15 +571,16 @@ function makeSegRow(seg, i) {
     transBox.placeholder = 'Перевод...'
 
     function updateLen() {
-      const { level, px } = lineLengthLevel(transBox.value)
+      const carry = carryPx(translations, ci)
+      const { level, px } = lineLengthLevel(transBox.value, carry)
       transBox.className = 'trans-box' + (level==='error'?' error':level==='warn'?' warn':'')
-      lenDiv.textContent = px ? `${px}/${MAX_LINE_PX}px` : ''
+      lenDiv.textContent = px ? `${px}/${MAX_LINE_PX}px` + (carry ? ` (с учётом предыдущих: +${Math.round(carry)})` : '') : ''
       lenDiv.style.color = level==='error'?'#ff5555':level==='warn'?'#aaaa44':'#44aa44'
     }
-    updateLen()
+    lenUpdaters.push(updateLen)
     transBox.addEventListener('input', () => {
       translations[ci] = transBox.value
-      updateLen()
+      refreshViews()
       scheduleAutosave(seg, translations, wrapper, header, prevEl, prevBox, overflowWarn, badgeWrap)
     })
     transWrap.appendChild(transBox); transWrap.appendChild(lenDiv)
@@ -637,7 +651,7 @@ function makeSegRow(seg, i) {
       clearTimeout(animTimer); animating = false
       playBtn.textContent = '▶ Воспроизвести'
       playBtn.style.background = '#334433'; playBtn.style.color = '#aaffaa'
-      renderPreview(translations.map(t=>t.replace(TAG_RE,'')).join(''), prevBox, overflowWarn)
+      renderPreview(buildPreviewText(chunks, translations), prevBox, overflowWarn)
     } else {
             // Build schedule from translations, respecting tags typed by translator
             const schedule = []
@@ -682,19 +696,22 @@ function makeSegRow(seg, i) {
       animating = true
       playBtn.textContent = '⏹ Стоп'
       playBtn.style.background = '#443333'; playBtn.style.color = '#ffaaaa'
-      prevBox.textContent = ''
-      let chunkIdx=0, charPos=0, displayed=''
+      const fullText = buildPreviewText(chunks, translations)
+      renderPreview(fullText, prevBox, overflowWarn, 0)
+      let chunkIdx=0, charPos=0, revealed=0
       function tick() {
         if (!animating) return
         if (chunkIdx >= schedule.length) {
           animating=false; playBtn.textContent='▶ Воспроизвести'
+          renderPreview(fullText, prevBox, overflowWarn)
           playBtn.style.background='#334433'; playBtn.style.color='#aaffaa'; return
         }
         const { text, pauseMs, intervalMs } = schedule[chunkIdx]
         charPos++
-        renderPreview(displayed + text.slice(0, charPos), prevBox, overflowWarn)
+        if (!/\s/.test(text[charPos-1])) revealed++
+        renderPreview(fullText, prevBox, overflowWarn, revealed)
         if (charPos >= text.length) {
-          displayed += text; chunkIdx++; charPos=0
+          chunkIdx++; charPos=0
           animTimer = pauseMs>0
             ? setTimeout(tick, pauseMs)
             : setTimeout(tick, schedule[chunkIdx]?.intervalMs||100)
@@ -705,9 +722,10 @@ function makeSegRow(seg, i) {
   })
 
   // Toggle open/close
-  let open = false
+  let open = false, viewsReady = false
   header.addEventListener('click', () => {
     open = !open
+    if (open && !viewsReady) { viewsReady = true; refreshViews() }
     editor.classList.toggle('open', open)
     chevron.textContent = open ? '▼' : '▶'
   })
@@ -767,7 +785,6 @@ function scheduleAutosave(seg, translations, wrapper, header, prevEl, prevBox, o
     // Update header preview
     const preview = translations.map(t => t.replace(TAG_RE,'')).join('')
     prevEl.textContent = preview || cleanText(seg.raw_segment)
-    if (prevBox) renderPreview(preview, prevBox, overflowWarn)
 
     const { error } = await db.from('segments')
       .update({ translations, status: newStatus })
